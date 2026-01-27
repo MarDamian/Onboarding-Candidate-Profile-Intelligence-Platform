@@ -18,7 +18,8 @@
 - React App - Interfaz principal (CRUD y búsqueda)
 - Svelte Microfrontend - Vista especializada embebida
 
-##Estructura del proyecto:
+## Estructura del proyecto:
+
     docs/
     ├─adr/
         ├─onboarding.md
