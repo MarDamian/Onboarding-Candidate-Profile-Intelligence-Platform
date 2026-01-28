@@ -4,7 +4,7 @@ services:
     restart: always
     container_name: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -29,6 +29,24 @@ services:
       - "6333:6333"
     volumes:
       - ./qdrant_data:/qdrant/storage
+
+  api-fastapi:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.fastapi
+    container_name: fastapi_app
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../services/api-fastapi:/app
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres_db
+      - redis
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
   postgres_data:
