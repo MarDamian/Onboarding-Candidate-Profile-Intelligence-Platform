@@ -1,3 +1,20 @@
-.env
+# Python
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
 venv/
+
+# Enviroment
+.env/
+.env
+
+# Docker
+postgres_data/
+redis_data/
+qdrant_data/
+qdrant/storage/
+
+# IDEs
+.idea/
+.vscode/
