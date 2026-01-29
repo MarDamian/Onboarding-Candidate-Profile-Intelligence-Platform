@@ -1,12 +1,20 @@
-# Bienvenido al proyecto Onboarding Candidate Profile Intelligence Platform
+# Onboarding Técnico
 
-A continuación se detallan los pasos para la configuracion inicial del entorno y empezar a contribuir al proyecto.
+Este documento describe los pasos necesarios para configurar el entorno de desarrollo local y comenzar a trabajar en el proyecto **Candidate Profile Intelligence Platform**.
 
-## Desarrollo
+El onboarding está orientado a desarrolladores y se centra en levantar la infraestructura base del sistema.
 
-### Setup del entorno
+## Requisitos
 
-1. Ejecutar los siguientes comandos:
+Asegúrate de tener instalado:
+
+- Docker
+- Docker Compose
+- Git
+
+## Setup del entorno
+
+### 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/wTreeData/Onboarding-Candidate-Profile-Intelligence-Platform.git
@@ -14,19 +22,30 @@ git clone https://github.com/wTreeData/Onboarding-Candidate-Profile-Intelligence
 cd Onboarding-Candidate-Profile-Intelligence-Platform
 ```
 
-2. Configurar las variables de entorno:
-
+### 2. Configurar las variables de entorno:
+El proyecto actual utiliza variables de entorno para la configuración de servicios.
 ```bash
-#Modificar el archivo .env con los valores correspondientes
-
 cp .env.example .env
 ```
+Deberás modificar el archivo .env si es necesario, según el entorno local.
 
-### Levantar servicios con Docker
-
-1. Ejecutar
+### 3. Levantar servicios con Docker
+Para iniciar los servicios base del proyecto, tiene que ejecutar:
 ```bash
-docker-compose up
-```
-2. Verificar que todos los servicios estén corriendo
+cd ./infra/
 
+docker compose up
+```
+Esto levantará los siguientes servicios:
+- PostgreSQL
+- Redis
+- Qdrant
+- FastAPI
+
+### 4. Verificar
+Una vez levantados los contenedores, verifica que los servicios estén corriendo:
+- PostgreSQL disponible en localhost:5433
+- Redis disponible en localhost:6379
+- Qdrant accesible en http://localhost:6333
+- FastAPI accesible en http://localhost:8000
+Si ves que todos los contenedores están en estado running, el entorno está correctamente configurado.
