@@ -37,16 +37,43 @@ Las funcionalidades de negocio (CRUD, ETL, búsqueda semántica, LLM) se impleme
 Ya con las bases establecidas, se procede a la implementación de los servicios principales:
 
 - Implementación de fastapi con CRUD completo de candidatos
-- Estructuracion de archivos y carpetas
+- Refactorización del servicio **FastAPI** hacia una estructura anidada (`app/`)
+  - Separación clara de `api`, `core`, `db`, `schemas` y `models`
 - Implementacion de Validaciones en schemas y models
 - Rutas de GET POST PUT DELETE para la gestion de candidatos
 - Documentacion de rutas openapi
+- Documentación del flujo de migraciones en el onboarding
+- Ajustes de configuración:
+  - Variables de entorno
+  - Carga de settings
+  - Reglas de ignore actualizadas
 - Integracion a a Docker
     - Dockerfile.fastapi
     - docker-compose.yml(api-fastapi service)
 - Especificacion de variables de entorno y requirements.txt
 
 Las funcionalidades de negocio (ETL, búsqueda semántica, LLM) se implementarán progresivamente en las siguientes fases.
+
+**Semana 1 – Día 5**
+
+Durante este día se implementa:
+
+- Inicialización de **Alembic** para manejo de migraciones
+  - Configuración de conexión a base de datos
+  - Definición de `Base` unificada
+  - Creación de migraciones iniciales
+- Manejo de estados de la aplicación:
+  - Estados de carga
+  - Manejo centralizado de errores
+- Mejora de experiencia de usuario:
+  - Formularios con `react-hook-form`
+  - Validaciones en frontend
+  - Componentes reutilizables
+- Dockerización de la aplicación React
+  - Integración del frontend dentro de la orquestación existente
+  - Configuración de variables de entorno
+- Ajustes de CORS en FastAPI para permitir comunicación UI ↔ API
+- Actualización de documentación técnica y arquitectónica
 
 ## Features (objetivo final)
 
@@ -56,7 +83,6 @@ Las funcionalidades de negocio (ETL, búsqueda semántica, LLM) se implementará
 - Búsqueda avanzada desde la interfaz de usuario
 - Generación de insights mediante LLM (resúmenes, extracción de información y scoring)
 - Microfrontend especializado en Svelte para vistas específicas
-
 
 ## Stack tecnológico
 
@@ -81,7 +107,6 @@ Las funcionalidades de negocio (ETL, búsqueda semántica, LLM) se implementará
 ### Infraestructura
 - **Docker & Docker Compose**
 - **Git**
-
 
 ## Estructura del proyecto
 
