@@ -1,52 +1,50 @@
-
-import { useParams } from "react-router-dom"
-import { useState,useEffect } from "react"
+import { useParams, useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useForm } from 'react-hook-form';
 import { updateCandidate, getCandidate } from "../services/ApiCandidate"
-import type { CandidateUpdate } from "../type"
+import type { CandidateUpdate } from "../types/candidate"
 
 export const EditPage = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
+    const { register, handleSubmit, reset, formState: { errors } } = useForm<CandidateUpdate>();
 
-    const [candidate, setCandidate] = useState<CandidateUpdate>({
-        name: '',
-        email: '',
-        phone: '',
-        location: '',
-        education: '',
-        headline: '',
-        summary: '',
-        role: '',
-        experience: '',
-        skills: ''
-    })
+    const [loading, setLoading] = useState<boolean>(false);
 
     const handleGetCandidate = async () => {
-        const candidate = await getCandidate(id);
-        setCandidate(candidate);
+        try {
+            const candidateData = await getCandidate(id);
+            if (candidateData) {
+                reset(candidateData);
+            }
+        } catch (error) {
+            console.error("Error fetching candidate for edit:", error);
+        }
     }
 
     useEffect(() => {
         handleGetCandidate();
     }, [id]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target
-        setCandidate(prev => ({
-            ...prev,
-            [name]: value
-        }))
+    const onSubmit = async (data: CandidateUpdate) => {
+        setLoading(true);
+        try {
+            await updateCandidate(id, data);
+            alert(`Candidate: ${data.name} edit successfully`);
+            navigate("/");
+        } catch (error) {
+            console.error("Error updating candidate:", error);
+            alert(`Candidate: ${data.name} not edited successfully`);
+        } finally {
+            setLoading(false);
+        }
     }
-    const handleSubmit = (e: React.SubmitEvent) => {
-        e.preventDefault();
-        updateCandidate(id, candidate);
-        alert(`Candidate: ${candidate.name} edit successfully`);
-    }
+
 
     return (
         <main>
             <h1>Edit</h1>
-            <form onSubmit={handleSubmit}
-
+            <form onSubmit={handleSubmit(onSubmit)}
                 style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -55,86 +53,51 @@ export const EditPage = () => {
                 }}
             >
                 <label htmlFor="name">Name</label>
-                <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={candidate?.name}
-                    onChange={handleChange}
-                />
+                <input {...register('name', { required: "Name is required" })} />
+                {errors.name && <p className='error'>{errors.name.message}</p>}
+
                 <label htmlFor="email">Email</label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={candidate?.email}
-                    onChange={handleChange}
-                />
+                <input {...register('email', { required: "Email is required" })} />
+                {errors.email && <p className='error'>{errors.email.message}</p>}
+
                 <label htmlFor="phone">Phone</label>
-                <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={candidate?.phone}
-                    onChange={handleChange}
-                />
+                <input {...register('phone', { required: "Phone is required" })} />
+                {errors.phone && <p className='error'>{errors.phone.message}</p>}
+
                 <label htmlFor="location">Location</label>
-                <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    value={candidate?.location}
-                    onChange={handleChange}
-                />
+                <input {...register('location', { required: "Location is required" })} />
+                {errors.location && <p className='error'>{errors.location.message}</p>}
+
                 <label htmlFor="education">Education</label>
-                <input
-                    type="text"
-                    id="education"
-                    name="education"
-                    value={candidate?.education}
-                    onChange={handleChange}
-                />
+                <input {...register('education', { required: "Education is required" })} />
+                {errors.education && <p className='error'>{errors.education.message}</p>}
+
                 <label htmlFor="headline">Headline</label>
-                <input
-                    type="text"
-                    id="headline"
-                    name="headline"
-                    value={candidate?.headline}
-                    onChange={handleChange}
-                />
+                <input {...register('headline', { required: "Headline is required" })} />
+                {errors.headline && <p className='error'>{errors.headline.message}</p>}
+
                 <label htmlFor="summary">Summary</label>
-                <input
-                    type="text"
-                    id="summary"
-                    name="summary"
-                    value={candidate?.summary}
-                    onChange={handleChange}
-                />
+                <input {...register('summary', { required: "Summary is required" })} />
+                {errors.summary && <p className='error'>{errors.summary.message}</p>}
+
                 <label htmlFor="role">Role</label>
-                <input
-                    type="text"
-                    id="role"
-                    name="role"
-                    value={candidate?.role}
-                    onChange={handleChange}
-                />
+                <input {...register('role', { required: "Role is required" })} />
+                {errors.role && <p className='error'>{errors.role.message}</p>}
+
                 <label htmlFor="experience">Experience</label>
-                <input
-                    type="text"
-                    id="experience"
-                    name="experience"
-                    value={candidate?.experience}
-                    onChange={handleChange}
-                />
+                <input {...register('experience', { required: "Experience is required" })} />
+                {errors.experience && <p className='error'>{errors.experience.message}</p>}
+
                 <label htmlFor="skills">Skills</label>
-                <input
-                    type="text"
-                    id="skills"
-                    name="skills"
-                    value={candidate?.skills}
-                    onChange={handleChange}
-                />
-                <button type="submit">Save</button>
+                <input {...register('skills', { required: "Skills is required" })} />
+                {errors.skills && <p className='error'>{errors.skills.message}</p>}
+
+                <button className="button" type="submit" disabled={loading}>
+                    {loading ? 'Saving...' : 'Save'}
+                </button>
+                <button className="button" type="button" onClick={() => navigate(-1)}>
+                    Back
+                </button>
             </form>
         </main>
     )
