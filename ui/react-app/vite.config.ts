@@ -6,4 +6,11 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   envDir: path.resolve(__dirname, "../../infra"),
+  server: {
+    host: true,
+    port: 5173,
+    watch: {
+      usePolling: true
+    }
+  }
 })

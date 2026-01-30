@@ -4,10 +4,12 @@ import { CreatePage } from './pages/Create'
 import { EditPage } from './pages/Edit'
 import { ShowPage } from './pages/Show'
 import { ListPage } from './pages/List'
+import { Navbar } from './components/Navbar'
 
 function App() {
   return (
     <>
+      <Navbar />
       <Routes>
         <Route path="/" element={<ListPage />} />
         <Route path="/create" element={<CreatePage />} />
