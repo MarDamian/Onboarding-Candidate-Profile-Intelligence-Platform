@@ -41,6 +41,7 @@ Esto levantará los siguientes servicios en segundo plano:
 - Redis
 - Qdrant
 - FastAPI
+- React
 
 ### 4. Aplicar migraciones
 Una vez esten los contenedores levantados:
@@ -55,10 +56,11 @@ Tener en cuenta no ejecutar migraciones directamente contra la base de datos.
 
 ### 5. Verificar
 Una vez levantados los contenedores, verifica que los servicios estén corriendo:
-- PostgreSQL disponible en localhost:5433
-- Redis disponible en localhost:6379
+- PostgreSQL disponible en http://localhost:5433
+- Redis disponible en http://localhost:6379
 - Qdrant accesible en http://localhost:6333
 - FastAPI accesible en http://localhost:8000
+- React App accesible en http://localhost:5173
 Si ves que todos los contenedores están en estado running, el entorno está correctamente configurado.
 
 ## Flujo de PR (IMPORTANTE)
