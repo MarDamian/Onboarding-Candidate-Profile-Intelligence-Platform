@@ -1,6 +1,6 @@
 from sqlalchemy import String, Text, Boolean, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
-from db.database import Base
+from app.db.database import Base
 from datetime import datetime
 
 class Candidate(Base):

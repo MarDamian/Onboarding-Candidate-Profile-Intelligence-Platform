@@ -25,7 +25,7 @@ cd Onboarding-Candidate-Profile-Intelligence-Platform
 ### 2. Configurar las variables de entorno:
 El proyecto actual utiliza variables de entorno para la configuración de servicios.
 ```bash
-cp .env.example .env
+cp infra/.env.example infra/.env
 ```
 Deberás modificar el archivo .env si es necesario, según el entorno local.
 
@@ -34,18 +34,51 @@ Para iniciar los servicios base del proyecto, tiene que ejecutar:
 ```bash
 cd ./infra/
 
-docker compose up
+docker compose up -d
 ```
-Esto levantará los siguientes servicios:
+Esto levantará los siguientes servicios en segundo plano:
 - PostgreSQL
 - Redis
 - Qdrant
 - FastAPI
+- React
 
-### 4. Verificar
+### 4. Aplicar migraciones
+Una vez esten los contenedores levantados:
+```bash
+docker compose run api-fastapi alembic upgrade head
+```
+Ahora también deberías ver la versión actual:
+```bash
+docker compose run api-fastapi alembic current
+``` 
+Tener en cuenta no ejecutar migraciones directamente contra la base de datos.
+
+### 5. Verificar
 Una vez levantados los contenedores, verifica que los servicios estén corriendo:
-- PostgreSQL disponible en localhost:5433
-- Redis disponible en localhost:6379
+- PostgreSQL disponible en http://localhost:5433
+- Redis disponible en http://localhost:6379
 - Qdrant accesible en http://localhost:6333
 - FastAPI accesible en http://localhost:8000
+- React App accesible en http://localhost:5173
 Si ves que todos los contenedores están en estado running, el entorno está correctamente configurado.
+
+## Flujo de PR (IMPORTANTE)
+
+### Flujo de trabajo
+- `main`: rama estable
+- `features`: integración de features
+- `feature/*`: desarrollo de funcionalidades específicas
+
+### Gitflow ejemplo
+Siempre las ramas feature/* se integran en features mediante Pull Request. Nunca se hace merge directo
+```bash
+git checkout features
+git pull
+git checkout -b feature/{feature-name}
+```
+### Notas
+
+- No hacer merge directo a `main`
+- No ejecutar Alembic fuera de Docker
+- Todas las modificaciones de modelos deben incluir migración

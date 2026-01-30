@@ -16,9 +16,11 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 ### Frontend
 
 - **React App**
-  - Interfaz principal del sistema
-  - Permite la gestión de perfiles (crear, listar, editar y eliminar)
-  - Consume la API pública expuesta por FastAPI
+  - Interfaz principal construida con React y TypeScript.
+  - **Gestión de Formularios**: Implementación de `react-hook-form` para validaciones eficientes y manejo de estado.
+  - **Diseño y Estilo**: Sistema de estilos moderno con CSS optimizado, incluyendo tablas con zebra-striping, efectos de hover y diseño responsivo.
+  - **Arquitectura de Red**: Capa de servicios centralizada (`ApiCandidate.tsx`) con gestión de errores y estados de carga (`loading`) descentralizados directamente en los componentes de página para mayor precisión visual.
+  - Consume la API pública expuesta por FastAPI.
 
 > En fases posteriores se integrará un microfrontend en Svelte para vistas especializadas.
 
