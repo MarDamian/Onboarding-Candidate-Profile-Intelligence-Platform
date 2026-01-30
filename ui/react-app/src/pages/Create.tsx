@@ -1,115 +1,80 @@
 import { useState } from 'react'
+import { useForm } from 'react-hook-form';
 import { createCandidate } from '../services/ApiCandidate'
-import type { CandidateCreate } from '../type'
+import type { CandidateCreate } from '../types/candidate'
+import { useNavigate } from 'react-router-dom'
 
 export const CreatePage = () => {
-    const [formData, setFormData] = useState<CandidateCreate>({
-        name: '',
-        email: '',
-        phone: '',
-        location: '',
-        education: '',
-        headline: '',
-        summary: '',
-        role: '',
-        experience: '',
-        skills: ''
-    })
+    const { register, handleSubmit, formState: { errors } } = useForm<CandidateCreate>();
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target
-        setFormData({
-            ...formData,
-            [name]: value
-        })
+    const [loading, setLoading] = useState<boolean>(false);
+
+    const navigate = useNavigate();
+
+    const onSubmit = async (data: CandidateCreate) => {
+        setLoading(true);
+        try {
+            const response = await createCandidate(data);
+            if (response) {
+                alert(`Candidate: ${data.name} created successfully`);
+                navigate("/");
+            }
+        } catch (error) {
+            console.error("Error creating candidate:", error);
+            alert(`Candidate: ${data.name} not created successfully`);
+        } finally {
+            setLoading(false);
+        }
     }
-    const handleSubmit = (e: React.SubmitEvent) => {
-        e.preventDefault();
-        createCandidate(formData);
-        alert(`Candidate: ${formData.name} created successfully`);
-    }
+
 
     return (
         <main>
-            <h1>Create</h1>
-            <form onSubmit={handleSubmit}
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-                maxWidth: '300px'
-            }}
+            <h1>Form to create a new candidate</h1>
+            <form onSubmit={handleSubmit(onSubmit)}
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem',
+                    maxWidth: '300px'
+                }}
             >
-                <label htmlFor="name">Name</label>
-                <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange} required />
+                <label htmlFor="name">Name: </label>
+                <input {...register('name', { required: "Name is required" })} />
+                {errors.name && <p className='error'>{errors.name.message}</p>}
                 <label htmlFor="email">Email</label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange} required />
+                <input {...register('email', { required: "Email is required" })} />
+                {errors.email && <p className='error'>{errors.email.message}</p>}
                 <label htmlFor="phone">Phone</label>
-                <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange} required />
+                <input {...register('phone', { required: "Phone is required" })} />
+                {errors.phone && <p className='error'>{errors.phone.message}</p>}
                 <label htmlFor="location">Location</label>
-                <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange} />
+                <input {...register('location', { required: "Location is required" })} />
+                {errors.location && <p className='error'>{errors.location.message}</p>}
                 <label htmlFor="education">Education</label>
-                <input
-                    type="text"
-                    id="education"
-                    name="education"
-                    value={formData.education}
-                    onChange={handleChange} />
+                <input {...register('education', { required: "Education is required" })} />
+                {errors.education && <p className='error'>{errors.education.message}</p>}
                 <label htmlFor="headline">Headline</label>
-                <input
-                    type="text"
-                    id="headline"
-                    name="headline"
-                    value={formData.headline}
-                    onChange={handleChange} />
+                <input {...register('headline', { required: "Headline is required" })} />
+                {errors.headline && <p className='error'>{errors.headline.message}</p>}
                 <label htmlFor="summary">Summary</label>
-                <input
-                    type="text"
-                    id="summary"
-                    name="summary"
-                    value={formData.summary}
-                    onChange={handleChange} />
+                <input {...register('summary', { required: "Summary is required" })} />
+                {errors.summary && <p className='error'>{errors.summary.message}</p>}
                 <label htmlFor="role">Role</label>
-                <input
-                    type="text"
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange} />
+                <input {...register('role', { required: "Role is required" })} />
+                {errors.role && <p className='error'>{errors.role.message}</p>}
                 <label htmlFor="experience">Experience</label>
-                <input
-                    type="text"
-                    id="experience"
-                    name="experience"
-                    value={formData.experience}
-                    onChange={handleChange} />
+                <input {...register('experience', { required: "Experience is required" })} />
+                {errors.experience && <p className='error'>{errors.experience.message}</p>}
                 <label htmlFor="skills">Skills</label>
-                <input
-                    type="text"
-                    id="skills"
-                    name="skills"
-                    value={formData.skills} onChange={handleChange} />
-                <button type="submit">Create</button>
+                <input {...register('skills', { required: "Skills is required" })} />
+                {errors.skills && <p className='error'>{errors.skills.message}</p>}
+                <button className="button" type="submit" disabled={loading}>
+                    {loading ? 'Creating...' : 'Create'}
+                </button>
+                <button className="button" onClick={() => navigate(-1)}>
+                    Back
+                </button>
             </form>
         </main>
     )
