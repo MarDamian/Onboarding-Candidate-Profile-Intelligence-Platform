@@ -48,6 +48,21 @@ services:
       - redis
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  react-app:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.react
+    container_name: react_app
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../ui/react-app:/app
+      - /app/node_modules
+    depends_on:
+      - api-fastapi
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
 volumes:
   postgres_data:
   qdrant_data:

@@ -27,3 +27,6 @@ redis_data/
 qdrant_data/
 qdrant/storage/
 
+# Node
+node_modules/
+dist/
