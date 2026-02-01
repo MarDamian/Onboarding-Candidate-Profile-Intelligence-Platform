@@ -49,6 +49,12 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 - **Redis**
   - Cache y soporte para procesamiento asíncrono
 
+### Persistencia y Migraciones
+
+- **Alembic**: Gestiona las migraciones de forma asíncrona al flujo de la aplicación.
+
+- **Estrategia de Seeds**: Los datos de prueba se gestionan mediante scripts de Python para mantener la consistencia con los tipos de datos definidos en los modelos de SQLAlchemy.
+
 
 ## Flujo actual
 
