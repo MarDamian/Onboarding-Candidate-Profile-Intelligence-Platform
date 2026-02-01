@@ -1,9 +1,6 @@
 from fastapi import FastAPI
 from app.api.v1 import candidate
 from fastapi.middleware.cors import CORSMiddleware
-from app.db.database import Base, engine
-
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Candidate Profile Intelligence Platform API",

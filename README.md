@@ -75,6 +75,12 @@ Durante este día se implementa:
 - Ajustes de CORS en FastAPI para permitir comunicación UI ↔ API
 - Actualización de documentación técnica y arquitectónica
 
+**Cierre Semana 1:**
+
+- Implementación exitosa de **Alembic**.
+- CRUD funcional y verificado con datos semilla automatizados.
+- Documentación de arquitectura de persistencia completada.
+
 ## Features (objetivo final)
 
 - CRUD completo de perfiles (crear, editar, eliminar y listar)

@@ -12,12 +12,12 @@ Asegúrate de tener instalado:
 - Docker Compose
 - Git
 
-## Setup del entorno
+## Set up del entorno
 
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/wTreeData/Onboarding-Candidate-Profile-Intelligence-Platform.git
+git clone https://github.com/MarDamian/Onboarding-Candidate-Profile-Intelligence-Platform.git
 
 cd Onboarding-Candidate-Profile-Intelligence-Platform
 ```
@@ -43,16 +43,23 @@ Esto levantará los siguientes servicios en segundo plano:
 - FastAPI
 - React
 
-### 4. Aplicar migraciones
-Una vez esten los contenedores levantados:
+### 4. Aplicar migraciones y Seeds
+Una vez esten los contenedores levantados, debes preparar la base de datos:
+
+- Aplicar la estructura ded tablas:
 ```bash
 docker compose run api-fastapi alembic upgrade head
 ```
-Ahora también deberías ver la versión actual:
+- Ahora también deberías ver la versión actual:
 ```bash
 docker compose run api-fastapi alembic current
 ``` 
 Tener en cuenta no ejecutar migraciones directamente contra la base de datos.
+
+- Insertar candidatos de prueba
+```bash
+docker compose exec api-fastapi python scripts/seed_db.py
+```
 
 ### 5. Verificar
 Una vez levantados los contenedores, verifica que los servicios estén corriendo:
