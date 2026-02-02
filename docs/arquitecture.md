@@ -13,7 +13,7 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 
 ## Componentes del sistema
 
-### Frontend
+### UI - Frontend
 
 - **React App**
   - Interfaz principal construida con React y TypeScript.
@@ -25,7 +25,7 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 > En fases posteriores se integrará un microfrontend en Svelte para vistas especializadas.
 
 
-### Backend
+### Servicios - Backend
 
 - **FastAPI**
   - API pública del sistema
@@ -60,6 +60,7 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 
 ```text
 React → FastAPI → PostgreSQL
+ETL → Flask
 ```
 
 ## Infraestructura

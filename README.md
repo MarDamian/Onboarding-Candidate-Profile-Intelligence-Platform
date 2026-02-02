@@ -81,6 +81,19 @@ Durante este día se implementa:
 - CRUD funcional y verificado con datos semilla automatizados.
 - Documentación de arquitectura de persistencia completada.
 
+**Semana 2 - Día 6-7**
+
+- Implementación pipeline del ETL
+  - ETL idempotente (usando `last_indexed_at`) mediante migración con alembic
+  - ETL con Redis y PostgreSQL
+- Endpoint administrativo en Flask y Dockerización del servicio Flask
+- Ajustes de CORS en Flask para permitir comunicación UI ↔ API
+- Actualización de documentación técnica y arquitectónica
+
+**Pendiente (semana 2 - día 6-7):**
+
+- Documentación del pipeline y servicio
+
 ## Features (objetivo final)
 
 - CRUD completo de perfiles (crear, editar, eliminar y listar)
@@ -129,6 +142,7 @@ infra/
     ├─ docker-compose.yml
     ├─ Dockerfile.fastapi
     ├─ db/
+        ├─ init.sql
 
 services/
 ├─ api-fastapi/
@@ -146,14 +160,34 @@ services/
     ├── main.py
     ├── requirements.txt       
 ├─ api-flask/
+    ├── api/
+        ├── etl_routes.py
+    ├── core/
+        ├── config.py
+    ├── services/
+        ├── etl_manager.py
+    ├── __init__.py
+    ├── run.py
+    ├── requirements.txt       
 ├─ worker-rust/
 
 ui/
 ├─ react-app/
+    ├── src/
+        ├── assets/
+        ├── components/
+        ├── pages/
+        ├── services/
+        ├── types/
+    ├── public/
 ├─ svelte-mf/
 
 pipelines/
 ├─ etl/
-
+    ├── etl/
+        ├── extract.py/
+        ├── transform.py/
+        ├── load.py/
+        ├── main.py/
 
 ```

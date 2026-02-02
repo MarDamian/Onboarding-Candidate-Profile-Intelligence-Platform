@@ -68,6 +68,7 @@ Una vez levantados los contenedores, verifica que los servicios estén corriendo
 - Qdrant accesible en http://localhost:6333
 - FastAPI accesible en http://localhost:8000
 - React App accesible en http://localhost:5173
+- Flask accesible en http://localhost:5000
 Si ves que todos los contenedores están en estado running, el entorno está correctamente configurado.
 
 ## Flujo de PR (IMPORTANTE)
