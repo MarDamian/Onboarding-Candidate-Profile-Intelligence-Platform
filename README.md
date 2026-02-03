@@ -90,9 +90,35 @@ Durante este día se implementa:
 - Ajustes de CORS en Flask para permitir comunicación UI ↔ API
 - Actualización de documentación técnica y arquitectónica
 
-**Pendiente (semana 2 - día 6-7):**
+**Semana 2 - Día 8**
 
-- Documentación del pipeline y servicio
+- **Implementación de embeddings reales con sentence-transformers**
+  - Servicio de embeddings centralizado (`pipelines/utils/embeddings_service.py`)
+  - Modelo `all-MiniLM-L6-v2` optimizado para CPU (384 dimensiones)
+  - Integración con el pipeline ETL para generación automática de vectores
+- **Colección de Qdrant completamente documentada**
+  - Estructura de vectores y payload
+  - Proceso de indexación incremental
+  - Documentación de mantenimiento y troubleshooting
+- **Búsqueda semántica funcional en Flask**
+  - Endpoint `/v1/search/` con búsqueda por texto en lenguaje natural
+  - Filtros por skills y nombre del candidato
+  - Score threshold configurable
+  - Endpoint `/v1/search/similar/{id}` para encontrar candidatos similares
+- **Separación de responsabilidades**
+  - FastAPI dedicado exclusivamente a CRUD de candidatos
+  - Flask con ETL y búsqueda semántica
+  - Eliminación de redundancia de torch en FastAPI
+- **Optimizaciones de infraestructura**
+  - Actualización de Dockerfiles y docker-compose
+  - Volúmenes compartidos para pipelines entre servicios
+  - Variables de entorno para Qdrant configuradas
+- Actualización completa de documentación de API y arquitectura
+
+**Pendiente:**
+
+- Integración con LLM para generación de insights
+- Microfrontend en Svelte
 
 ## Features (objetivo final)
 
@@ -107,87 +133,217 @@ Durante este día se implementa:
 
 ### Backend
 - **FastAPI**: API pública para CRUD de perfiles, búsqueda semántica e insights
+  - Documentación automática con OpenAPI/Swagger
+  - Validación de datos con Pydantic
+  - Alembic para migraciones de base de datos
 - **Flask**: API administrativa para ETL, reindexación y monitoreo
-- **Rust**: Workers para procesamiento batch y tareas pesadas
+  - Gestión de procesos ETL con Redis como cola
+  - Endpoints administrativos para operaciones batch
+  - Gunicorn como servidor WSGI
 
 ### Data
-- **PostgreSQL**: Base de datos principal
-- **Redis**: Cache y gestión de jobs
+- **PostgreSQL 17.5**: Base de datos relacional principal
+  - Almacenamiento de perfiles de candidatos
+  - Gestión de timestamps para indexación incremental
+  - Scripts de inicialización y seeding automáticos
+- **Redis 8.4.0**: Cache y gestión de jobs
+  - Tracking de estado de procesos ETL
+  - Sistema de jobs para operaciones asíncronas
 - **Procesos ETL**: Ingesta y transformación de datos
+  - Pipeline modular (Extract → Transform → Load)
+  - Procesamiento idempotente con `last_indexed_at`
+  - Generación automática de embeddings
 
 ### Vector & AI
-- **Qdrant**: Motor de búsqueda vectorial
-- **LLMs**: Prompts versionados, tool calling y compresión de contexto
+- **Qdrant v1.16.2**: Motor de búsqueda vectorial
+  - Almacenamiento y búsqueda de embeddings de 384 dimensiones
+  - Soporte para filtros combinados (skills, nombre)
+  - Persistencia de datos en volúmenes Docker
+- **Sentence Transformers**: Generación de embeddings
+  - Modelo: `all-MiniLM-L6-v2` (optimizado para CPU)
+  - Servicio centralizado de embeddings
+  - Configuración dinámica vía variables de entorno
+- **LLMs**: Prompts versionados y generación de insights (pendiente)
 
 ### Frontend
-- **React**: Interfaz principal (CRUD y búsqueda)
-- **Svelte**: Microfrontend especializado integrado en React
+- **React + TypeScript**: Interfaz principal
+  - Vite como bundler y dev server
+  - React Router para navegación
+  - Gestión de estado con hooks
+  - Componentes para CRUD completo
+- **Svelte**: Microfrontend especializado integrado en React (pendiente)
 
 ### Infraestructura
-- **Docker & Docker Compose**
-- **Git**
+- **Docker & Docker Compose**: Orquestación de servicios
+  - Postgres, Redis, Qdrant, FastAPI, Flask, React
+  - Volúmenes para persistencia de datos
+  - Red compartida entre servicios
+  - Hot reload en desarrollo
+- **Git**: Control de versiones
+
+## Servicios y puertos
+
+| Servicio | Puerto | Descripción |
+|----------|--------|-------------|
+| FastAPI | 8000 | API REST para CRUD de candidatos |
+| Flask | 5000 | API administrativa (ETL + búsqueda semántica) |
+| React | 5173 | Interfaz de usuario web |
+| PostgreSQL | 5433 | Base de datos relacional |
+| Redis | 6379 | Cache y cola de jobs |
+| Qdrant | 6333 | Motor de búsqueda vectorial |
+
+## Endpoints principales
+
+### FastAPI (Puerto 8000)
+- `GET /v1/candidates/` - Listar candidatos
+- `POST /v1/candidates/` - Crear candidato
+- `GET /v1/candidates/{id}` - Obtener candidato
+- `PUT /v1/candidates/{id}` - Actualizar candidato
+- `DELETE /v1/candidates/{id}` - Eliminar candidato
+- `GET /docs` - Documentación Swagger/OpenAPI
+
+### Flask (Puerto 5000)
+- `POST /v1/admin/etl/sync` - Ejecutar pipeline ETL completo
+- `GET /v1/admin/etl/status` - Consultar estado de job ETL
+- `POST /v1/search/` - Búsqueda semántica por texto
+- `GET /v1/search/similar/{id}` - Candidatos similares
+- `POST /v1/admin/qdrant/reindex` - Re-indexar todos los candidatos
+- `GET /v1/admin/qdrant/stats` - Estadísticas de Qdrant
+
+## Inicio rápido
+
+### Prerrequisitos
+- Docker y Docker Compose instalados
+- Git para clonar el repositorio
+
+### Pasos para levantar el proyecto
+
+1. **Clonar el repositorio**
+```bash
+git clone <repository-url>
+cd Onboarding-Candidate-Profile-Intelligence-Platform
+```
+
+2. **Configurar variables de entorno**
+```bash
+cd infra
+cp .env.example .env
+# Editar .env con tus configuraciones
+```
+
+3. **Levantar todos los servicios**
+```bash
+docker compose up --build
+```
+
+4. **Acceder a los servicios**
+- UI React: http://localhost:5173
+- API FastAPI: http://localhost:8000/docs
+- API Flask: http://localhost:5000
+- Qdrant Dashboard: http://localhost:6333/dashboard
+
+### Inicialización automática
+
+Al levantar los servicios, se ejecutan automáticamente:
+- **Migraciones de Alembic**: Crean/actualizan la estructura de la base de datos
+- **Seed de datos**: Insertan candidatos de ejemplo para pruebas
+- **Colección Qdrant**: Se crea automáticamente al ejecutar el primer ETL
 
 ## Estructura del proyecto
 
 ```text
 docs/
-├─ adr/
-├─ onboarding.md
-├─ architecture.md
-├─ api.md
-├─ runbook.md
+├── adr/                           # Architecture Decision Records
+├── onboarding.md                  # Guía de onboarding técnico
+├── arquitecture.md                # Documentación de arquitectura
+├── api.md                         # Documentación de endpoints
+└── qdrant-collection.mb           # Documentacion de qdrant
 
 infra/
-    ├─ .env.example
-    ├─ docker-compose.yml
-    ├─ Dockerfile.fastapi
-    ├─ db/
-        ├─ init.sql
+├── docker-compose.yml             # Orquestación de servicios
+├── Dockerfile.fastapi             # Imagen para FastAPI
+├── Dockerfile.flask               # Imagen para Flask
+├── Dockerfile.react               # Imagen para React
+└── db/
+    └── init.sql                   # Script de inicialización de DB
 
 services/
-├─ api-fastapi/
-    ├── api/
-    ├── v1/
-        ├── candidate.py
-    ├── core/
-        ├── config.py
-    ├── db/
-        ├── models/
-            ├── candidate.py
-        ├── database.py
-    ├── schemas/
-        ├── candidate.py
-    ├── main.py
-    ├── requirements.txt       
-├─ api-flask/
-    ├── api/
-        ├── etl_routes.py
-    ├── core/
-        ├── config.py
-    ├── services/
-        ├── etl_manager.py
-    ├── __init__.py
-    ├── run.py
-    ├── requirements.txt       
-├─ worker-rust/
+├── api-fastapi/                   # API principal (CRUD + búsqueda)
+│   ├── alembic/                   # Migraciones de base de datos
+│   ├── app/
+│   │   ├── api/v1/                # Endpoints versioned
+│   │   ├── core/                  # Configuración
+│   │   ├── db/                    # Modelos y conexión
+│   │   ├── schemas/               # Validación con Pydantic
+│   │   └── main.py 
+│   ├── scripts/
+│   │   └── seed_db.py             # Script de datos semilla
+│   ├── requirements.txt
+│   └── alembic.ini
+│
+├── api-flask/                     # API administrativa (ETL)
+│   ├── app/
+│   │   ├── api/                   # Rutas de ETL
+│   │   ├── core/                  # Configuración
+│   │   ├──services/              # Lógica de ETL
+│   │   └── __init__.py
+│   ├── requirements.txt
+│   └── run.py
 
 ui/
-├─ react-app/
+└── react-app/                     # Interfaz de usuario
     ├── src/
-        ├── assets/
-        ├── components/
-        ├── pages/
-        ├── services/
-        ├── types/
-    ├── public/
-├─ svelte-mf/
+    │   ├── components/            # Componentes reutilizables
+    │   ├── pages/                 # Páginas de la aplicación
+    │   ├── services/              # Cliente API
+    │   └── types/                 # Tipos TypeScript
+    ├── package.json
+    └── vite.config.ts
 
 pipelines/
-├─ etl/
-    ├── etl/
-        ├── extract.py/
-        ├── transform.py/
-        ├── load.py/
-        ├── main.py/
+├── etl/                           # Pipeline ETL modular
+│   ├── extract.py                 # Extracción de datos
+│   ├── transform.py               # Transformación y embeddings
+│   ├── load.py                    # Carga a Qdrant
+│   └── main.py                    # Orquestador del pipeline
+└── utils/
+    ├── embeddings_service.py      # Servicio de generación de embeddings
+    └── search_service.py          # Serrvicio de busqueda con qdrant
 
+prompts/
+├── candidate_summary/             # Prompts versionados para resúmenes
+└── skill_extraction/              # Prompts para extracción de skills
 ```
+
+## Documentación adicional
+
+- **[Onboarding técnico](docs/onboarding.md)**: Guía paso a paso para nuevos desarrolladores
+- **[Arquitectura](docs/arquitecture.md)**: Decisiones de diseño y patrones utilizados
+- **[API Reference](docs/api.md)**: Documentación completa de endpoints
+- **[ADRs](docs/adrs/)**: Decisiones arquitectónicas registradas
+
+## Próximos pasos
+
+Para continuar con el desarrollo del proyecto:
+
+1. **Integración con LLM**
+   - Generación de resúmenes de candidatos
+   - Extracción inteligente de skills
+   - Sistema de scoring automatizado
+
+2. **Microfrontend en Svelte**
+   - Vista especializada de análisis de candidatos
+   - Integración con la aplicación React principal
+
+3. **Optimizaciones**
+   - Caching de embeddings
+   - Procesamiento batch asíncrono
+   - Monitoreo y logging centralizado
+
+## Contribuciones
+
+Este proyecto forma parte de un plan de onboarding. Para contribuir:
+
+1. Revisar la [documentación de arquitectura](docs/arquitecture.md)
+2. Consultar los [ADRs](docs/adrs/) para entender decisiones de diseño
+3. Seguir la [guía de onboarding](docs/onboarding.md) para configurar el entorno
