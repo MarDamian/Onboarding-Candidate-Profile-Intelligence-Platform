@@ -1,9 +1,16 @@
+from pipelines.utils.embeddings_service import EmbeddingsService
+
+
 class Transformer:
     def __init__(self):
-        pass
+        """Inicializa el transformador con el servicio de embeddings.
+        
+        El modelo se carga una sola vez para optimizar rendimiento.
+        """
+        self.embeddings_service = EmbeddingsService()
     
     def prepare_vector(self, candidate):
-        """Concatena los datos para dar contexto al vector.
+        """Concatena los datos para dar contexto al vector y genera embedding real.
 
         Args:
             candidate (Candidate): El candidate actual.
@@ -13,7 +20,7 @@ class Transformer:
         """
         context_text = f"{candidate.name} | {candidate.summary} | Skills: {candidate.skills} | Experience: {candidate.experience}"
         
-        vector = [0.1]*384
+        vector = self.embeddings_service.generate_embedding(context_text)
         
         return {
             "id": candidate.id,
