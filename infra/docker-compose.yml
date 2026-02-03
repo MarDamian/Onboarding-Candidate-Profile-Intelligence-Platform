@@ -1,6 +1,6 @@
 services:
   postgres_db:
-    image: postgres:18.1
+    image: postgres:17.5-alpine
     restart: always
     container_name: postgres
     ports:
@@ -14,7 +14,7 @@ services:
       - ../infra/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   redis:
-    image: redis:8.4
+    image: redis:8.4.0-alpine
     restart: always
     container_name: redis
     ports:
@@ -23,7 +23,7 @@ services:
       - redis_data:/data
 
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.16.2
     restart: always
     container_name: qdrant
     ports:
@@ -41,11 +41,17 @@ services:
       - "8000:8000"
     volumes:
       - ../services/api-fastapi:/app
+      - ../pipelines:/app/pipelines
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
+      - QDRANT_HOST=qdrant
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+      - EMBEDDING_DIMENSION=${EMBEDDING_DIMENSION}
+      - EMBEDDING_DISTANCE=${EMBEDDING_DISTANCE}
     depends_on:
       - postgres_db
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      - qdrant
+    command: sh -c "alembic upgrade head && python scripts/seed_db.py && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
   api-flask:
     build:
@@ -62,11 +68,14 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
       - REDIS_URL=${REDIS_URL}
       - QDRANT_HOST=qdrant
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+      - EMBEDDING_DIMENSION=${EMBEDDING_DIMENSION}
+      - EMBEDDING_DISTANCE=${EMBEDDING_DISTANCE}
     depends_on:
       - qdrant
       - redis
       - postgres_db
-    command: gunicorn --bind 0.0.0.0:5000 run:app --reload
+    command: gunicorn --bind 0.0.0.0:5000 --timeout 300 --workers 1 --reload run:app
 
   react-app:
     build:

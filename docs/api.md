@@ -2,9 +2,15 @@
 
 Bienvenido a la documentación de la API para la **Candidate Profile Intelligence Platform**. Esta API está construida con dos servicios:
 
-- FastAPI: Permite gestionar perfiles de candidatos, incluyendo su creación, recuperación, actualización y eliminación.
+- **FastAPI** (Puerto 8000): API pública para CRUD de candidatos
+  - Crear, leer, actualizar y eliminar candidatos
+  - Operaciones síncronas y rápidas
+  - Documentación automática en `/docs`
 
-- Flask: Permite gestionar procesos ETL y tareas de mantenimiento.
+- **Flask** (Puerto 5000): API administrativa para ETL, búsqueda semántica y mantenimiento
+  - Procesos ETL para indexación
+  - Búsqueda semántica con Qdrant
+  - Operaciones de administración y mantenimiento
 
 ## FastAPI - Documentación
 
@@ -93,10 +99,6 @@ Campos básicos de identificación.
   "skills": "string (opcional)"
 }
 ```
-
-#### CandidateCreate (Hereda de CandidateBase)
-Requerido para la creación. `name`, `email`, y `phone` son obligatorios.
-
 #### CandidateUpdate
 Todos los campos son opcionales para permitir actualizaciones parciales.
 
@@ -116,7 +118,7 @@ Retornado por los métodos de consulta. Incluye campos del sistema:
 | **409** | Conflict (Conflicto por datos duplicados como el email) |
 | **422** | Unprocessable Entity (Fallo de validación, ej. formato de email inválido) |
 
-## Flask - Documentación
+## Flask - Documentación de Api Administrativa
 
 ### URL Base
 
@@ -124,20 +126,98 @@ Retornado por los métodos de consulta. Incluye campos del sistema:
 | :--- | :--- |
 | **Desarrollo** | `http://localhost:5000/v1` |
 
-### Endpoints de Candidatos
+### Endpoints de Administración ETL
 
-#### 1. Procesar ETL y records procesados
+#### 1. Ejecutar Pipeline ETL
+Procesa candidatos pendientes de indexación en Qdrant.
 
-- **URL:** `admin/etl/sync/`
+- **URL:** `/admin/etl/sync`
 - **Método:** `POST`
 - **Respuesta Exitosa:**
   - **Código:** `200 OK`
-  - **Contenido:** status, mensaje y records procesados.
+  - **Contenido:** Objeto con status, mensaje y número de registros procesados.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error durante ejecución del ETL).
 
-#### 2. Status de jobs
+#### 2. Consultar Status de Jobs ETL
+Obtiene el historial de ejecuciones del pipeline ETL.
 
-- **URL:** `admin/etl/status/`
+- **URL:** `/admin/etl/status`
 - **Método:** `GET`
 - **Respuesta Exitosa:**
   - **Código:** `200 OK`
-  - **Contenido:** Jobs encontrados y status.
+  - **Contenido:** Lista de jobs con sus estados y resultados.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error consultando historial).
+
+#### 3. Búsqueda Semántica de Candidatos
+Realiza una búsqueda semántica utilizando embeddings y filtros opcionales.
+
+- **URL:** `/search/`
+- **Método:** `POST`
+- **Parámetros de Datos:** Objeto `SearchRequest`.
+- **Respuesta Exitosa:**
+  - **Código:** `200 OK`
+  - **Contenido:** Objeto `SearchResponse` con lista de candidatos ordenados por relevancia.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error consultando historial).
+
+#### 4. Buscar Candidatos Similares
+Encuentra candidatos similares a uno existente basándose en su perfil.
+
+- **URL:** `/search/similar/{candidate_id}`
+- **Método:** `GET`
+- **Parámetros de URL:** `candidate_id=[int]`
+- **Parámetros de Query:**
+  - `limit`: Número de resultados (default: 5)
+  - `score_threshold`: Umbral de similitud (default: 0.0)
+- **Respuesta Exitosa:**
+  - **Código:** `200 OK`
+  - **Contenido:** Objeto `SearchResponse` con candidatos similares.
+- **Respuestas de Error:**
+  - **Código:** `404 Not Found` (El candidato no está indexado en Qdrant).
+  - **Código:** `500 Internal Server Error` (Error en el servidor de búsqueda).
+
+#### 5. Re-indexar Todos los Candidatos
+Fuerza la re-indexación completa de todos los candidatos en Qdrant.
+
+- **URL:** `/admin/qdrant/reindex`
+- **Método:** `POST`
+- **Respuesta Exitosa:**
+  - **Código:** `200 OK`
+  - **Contenido:** Objeto con status, mensaje y número de candidatos re-indexados.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error durante la re-indexación).
+
+#### 6. Obtener Estadísticas de Qdrant
+Obtiene información y métricas de la colección de candidatos.
+
+- **URL:** `/admin/qdrant/stats`
+- **Método:** `GET`
+- **Respuesta Exitosa:**
+  - **Código:** `200 OK`
+  - **Contenido:** Objeto con estadísticas de la colección.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error obteniendo estadísticas).
+
+#### 7. Limpiar Colección de Qdrant
+Elimina todos los puntos de la colección de candidatos en Qdrant.
+
+- **URL:** `/admin/qdrant/clear`
+- **Método:** `DELETE`
+- **Respuesta Exitosa:**
+  - **Código:** `200 OK`
+  - **Contenido:** Objeto con status, mensaje y número de puntos eliminados.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error limpiando colección).
+
+#### 8. Reconstruir Colección desde Cero
+Reconstruye completamente la colección limpiando Qdrant y re-indexando todos los candidatos.
+
+- **URL:** `/admin/qdrant/rebuild`
+- **Método:** `POST`
+- **Respuesta Exitosa:**
+  - **Código:** `200 OK`
+  - **Contenido:** Objeto con status, mensaje y número de candidatos re-indexados.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error reconstruyendo colección).

@@ -40,7 +40,6 @@ def upgrade() -> None:
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('phone')
     )
-    op.drop_table('etl_logs')
     # ### end Alembic commands ###
 
 
