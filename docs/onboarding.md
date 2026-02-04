@@ -37,7 +37,7 @@ Para iniciar todos los servicios del proyecto:
 ```bash
 cd ./infra/
 
-docker compose up -d
+docker compose up
 ```
 Esto levantará los siguientes servicios en segundo plano:
 - PostgreSQL (Base de datos relacional)
