@@ -81,6 +81,34 @@ Elimina un perfil de candidato del sistema.
 - **Respuesta de Error:**
   - **Código:** `404 Not Found` (El candidato no existe).
 
+#### 6. Búsqueda Semántica de Candidatos
+Realiza una búsqueda semántica utilizando embeddings y filtros opcionales.
+
+- **URL:** `/semantic_search/`
+- **Método:** `POST`
+- **Parámetros de Datos:** Objeto `SearchRequest`.
+- **Respuesta Exitosa:**
+  - **Código:** `200 OK`
+  - **Contenido:** Objeto `SearchResponse` con lista de candidatos ordenados por relevancia.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error consultando historial).
+
+#### 7. Buscar Candidatos Similares
+Encuentra candidatos similares a uno existente basándose en su perfil.
+
+- **URL:** `/semantic_search/similar/{candidate_id}`
+- **Método:** `GET`
+- **Parámetros de URL:** `candidate_id=[int]`
+- **Parámetros de Query:**
+  - `limit`: Número de resultados (default: 5)
+  - `score_threshold`: Umbral de similitud (default: 0.0)
+- **Respuesta Exitosa:**
+  - **Código:** `200 OK`
+  - **Contenido:** Objeto `SearchResponse` con candidatos similares.
+- **Respuestas de Error:**
+  - **Código:** `404 Not Found` (El candidato no está indexado en Qdrant).
+  - **Código:** `500 Internal Server Error` (Error en el servidor de búsqueda).
+
 ### Esquemas (Schemas)
 
 #### CandidateBase
@@ -108,6 +136,14 @@ Retornado por los métodos de consulta. Incluye campos del sistema:
 - `is_active`: `bool`
 - `created_at`: `datetime`
 - `updated_at`: `datetime`
+
+#### SearchRequest
+Campos para búsqueda semántica:
+- `query`: `str`
+- `limit`: `int`
+- `score_threshold`: `float`
+- `skills_filter`: `Optional[list[str]]`
+- `name_filter`: `Optional[str]`
 
 ### Códigos de Error Comunes
 
@@ -150,35 +186,7 @@ Obtiene el historial de ejecuciones del pipeline ETL.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error consultando historial).
 
-#### 3. Búsqueda Semántica de Candidatos
-Realiza una búsqueda semántica utilizando embeddings y filtros opcionales.
-
-- **URL:** `/search/`
-- **Método:** `POST`
-- **Parámetros de Datos:** Objeto `SearchRequest`.
-- **Respuesta Exitosa:**
-  - **Código:** `200 OK`
-  - **Contenido:** Objeto `SearchResponse` con lista de candidatos ordenados por relevancia.
-- **Respuestas de Error:**
-  - **Código:** `500 Internal Server Error` (Error consultando historial).
-
-#### 4. Buscar Candidatos Similares
-Encuentra candidatos similares a uno existente basándose en su perfil.
-
-- **URL:** `/search/similar/{candidate_id}`
-- **Método:** `GET`
-- **Parámetros de URL:** `candidate_id=[int]`
-- **Parámetros de Query:**
-  - `limit`: Número de resultados (default: 5)
-  - `score_threshold`: Umbral de similitud (default: 0.0)
-- **Respuesta Exitosa:**
-  - **Código:** `200 OK`
-  - **Contenido:** Objeto `SearchResponse` con candidatos similares.
-- **Respuestas de Error:**
-  - **Código:** `404 Not Found` (El candidato no está indexado en Qdrant).
-  - **Código:** `500 Internal Server Error` (Error en el servidor de búsqueda).
-
-#### 5. Re-indexar Todos los Candidatos
+#### 3. Re-indexar Todos los Candidatos
 Fuerza la re-indexación completa de todos los candidatos en Qdrant.
 
 - **URL:** `/admin/qdrant/reindex`
@@ -189,7 +197,7 @@ Fuerza la re-indexación completa de todos los candidatos en Qdrant.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error durante la re-indexación).
 
-#### 6. Obtener Estadísticas de Qdrant
+#### 4. Obtener Estadísticas de Qdrant
 Obtiene información y métricas de la colección de candidatos.
 
 - **URL:** `/admin/qdrant/stats`
@@ -200,7 +208,7 @@ Obtiene información y métricas de la colección de candidatos.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error obteniendo estadísticas).
 
-#### 7. Limpiar Colección de Qdrant
+#### 5. Limpiar Colección de Qdrant
 Elimina todos los puntos de la colección de candidatos en Qdrant.
 
 - **URL:** `/admin/qdrant/clear`
@@ -211,7 +219,7 @@ Elimina todos los puntos de la colección de candidatos en Qdrant.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error limpiando colección).
 
-#### 8. Reconstruir Colección desde Cero
+#### 6. Reconstruir Colección desde Cero
 Reconstruye completamente la colección limpiando Qdrant y re-indexando todos los candidatos.
 
 - **URL:** `/admin/qdrant/rebuild`
