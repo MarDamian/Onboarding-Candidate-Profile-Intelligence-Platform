@@ -1,10 +1,12 @@
-from sentence_transformers import SentenceTransformer
+import cohere
 from typing import List
+from dotenv import load_dotenv
 import os
 import warnings
 
 warnings.filterwarnings("ignore", message=".*clean_up_tokenization_spaces.*")
 
+load_dotenv()
 
 class EmbeddingsService:
     """Servicio centralizado para generación de embeddings usando sentence-transformers."""
@@ -16,13 +18,12 @@ class EmbeddingsService:
             model_name: Nombre del modelo de sentence-transformers a usar.
                        Si no se especifica, se lee de EMBEDDING_MODEL env var.
         """
-        if model_name is None:
-            model_name = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+        self.api_key = os.getenv("COHERE_API_KEY")
+        self.client = cohere.Client(self.api_key)
+        self.model = os.getenv("EMBEDDING_MODEL")
+        self.dimension = int(os.getenv("EMBEDDING_DIMENSION"))
         
-        self.model = SentenceTransformer(model_name)
-        self.dimension = int(os.getenv("EMBEDDING_DIMENSION", "384"))
-        
-    def generate_embedding(self, text: str) -> List[float]:
+    def generate_embedding(self, text: str, input_type: str = "search_document") -> List[float]:
         """Genera el vector de embedding para un texto dado.
         
         Args:
@@ -31,5 +32,11 @@ class EmbeddingsService:
         Returns:
             Lista de floats representando el vector de embedding
         """
-        embedding = self.model.encode(text, convert_to_numpy=True)
-        return embedding.tolist()
+        response = self.client.embed(
+            texts=[text],
+            model=self.model,
+            input_type=input_type,
+            embedding_types=['float']
+        )
+
+        return response.embeddings.float[0]
