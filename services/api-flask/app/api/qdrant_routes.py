@@ -7,8 +7,8 @@ import os
 
 qdrant_bp = Blueprint('qdrant', __name__, url_prefix='/v1/admin/qdrant')
 
-QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
-DB_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/candidates_db")
+QDRANT_HOST = os.getenv("QDRANT_HOST")
+DB_URL = os.getenv("DATABASE_URL")
 
 
 @qdrant_bp.route('/reindex', methods=['POST'])
