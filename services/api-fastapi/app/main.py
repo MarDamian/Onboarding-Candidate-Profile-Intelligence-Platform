@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api.v1 import candidate
+from app.api.v1 import candidate, search, insights
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -17,6 +17,8 @@ app.add_middleware(
 )
 
 app.include_router(candidate.router, prefix="/v1")
+app.include_router(search.router, prefix="/v1")
+app.include_router(insights.router, prefix="/v1")
 
 @app.get("/")
 def read_root():
