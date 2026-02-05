@@ -11,17 +11,13 @@ load_dotenv()
 class EmbeddingsService:
     """Servicio centralizado para generación de embeddings usando sentence-transformers."""
     
-    def __init__(self, model_name: str = None):
+    def __init__(self):
         """Inicializa el servicio con el modelo especificado.
-        
-        Args:
-            model_name: Nombre del modelo de sentence-transformers a usar.
-                       Si no se especifica, se lee de EMBEDDING_MODEL env var.
         """
         self.api_key = os.getenv("COHERE_API_KEY")
         self.client = cohere.Client(self.api_key)
         self.model = os.getenv("EMBEDDING_MODEL")
-        self.dimension = int(os.getenv("EMBEDDING_DIMENSION"))
+        self.dimension = os.getenv("EMBEDDING_DIMENSION")
         
     def generate_embedding(self, text: str, input_type: str = "search_document") -> List[float]:
         """Genera el vector de embedding para un texto dado.
