@@ -21,5 +21,8 @@ def sync():
 
 @etl_bp.route('/status', methods=['GET'])
 def status():
-    history = etl_service.get_execution_history()
-    return jsonify(history), 200
+    try:
+        executions = etl_service.get_executions()
+        return jsonify({"executions": executions}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

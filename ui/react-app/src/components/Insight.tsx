@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom"
+import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import { useState, useEffect } from "react"
 import type { CandidateInsight } from '../types/insight';
 import InsightsService from "../services/InsightsService";
@@ -53,9 +53,17 @@ export const Insight = ({ candidateId }: Props) => {
         )
     }
 
+    const dataS = data.strengths.map((s, i) => ({ name: s, value: 100 - i * 10 }));
+
     return (
         <Card title="Insights" subtitle={`Score: ${data.score}/100`}>
             <p>"{data.summary}"</p>
+            <BarChart width={400} height={200} data={dataS}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#8884d8" />
+            </BarChart>
             <div>
                 <div>
                     <h4>Fortalezas</h4>

@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 import os
 
-load_dotenv(os.path.join(os.path.dirname(__file__), "../../../infra/.env"))
+load_dotenv()
 
 class Settings(BaseSettings):
     # Configuración de Framework
@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = os.getenv("REDIS_URL")
     QDRANT_HOST: str = os.getenv("QDRANT_HOST")
     
+    # Api key Embedding
     COHERE_API_KEY: str = os.getenv("COHERE_API_KEY")
 
 settings = Settings()

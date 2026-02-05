@@ -7,7 +7,6 @@ class Extractor:
     def get_stale_candidate(self):
         """Extrae candidatos que nunca se han indexado o que cambiaron después de indexarse.
         """
-        
         query = text("""
             SELECT id, name, summary, skills, experience, updated_at
             FROM candidates

@@ -29,3 +29,8 @@ class ETLManager:
             return {"status": "idle", "message": "No jobs found"}
 
         return json.loads(data)
+    
+    def get_executions(self, limit: int = 50):
+        """Obtiene el historial de ejecuciones de ETL desde Redis."""
+        executions = self.redis_client.lrange('etl_executions', -limit, -1)
+        return [json.loads(exec) for exec in executions]

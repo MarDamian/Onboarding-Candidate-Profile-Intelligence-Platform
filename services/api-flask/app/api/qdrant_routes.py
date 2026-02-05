@@ -3,39 +3,38 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Filter
 from pipelines.etl.main import run_pipeline
 from sqlalchemy import create_engine, text
-import os
+from sqlalchemy.orm import sessionmaker
+from app.core.config import settings
 
 qdrant_bp = Blueprint('qdrant', __name__, url_prefix='/v1/admin/qdrant')
 
-QDRANT_HOST = os.getenv("QDRANT_HOST")
-DB_URL = os.getenv("DATABASE_URL")
-
+engine = create_engine(settings.DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @qdrant_bp.route('/reindex', methods=['POST'])
 def reindex_all():
     try:
-        engine = create_engine(DB_URL)
-        with engine.connect() as conn:
-            result = conn.execute(text("UPDATE candidates SET last_indexed_at = NULL"))
-            conn.commit()
+        with SessionLocal() as db:
+            db.execute(text("UPDATE candidates SET last_indexed_at = NULL"))
+            db.commit()
         
-        records_processed = run_pipeline()
+        result = run_pipeline()
         
         return jsonify({
-            "status": "success",
-            "message": "Re-indexación completada exitosamente",
-            "candidates_reindexed": records_processed
+            'status': 'success', 
+            'message': 'Reindexing completed', 
+            'details': result
         }), 200
     except Exception as e:
         return make_response(jsonify({
-            "error": f"Error durante re-indexación: {str(e)}"
+            "error": f"Error during re-indexing: {str(e)}"
         }), 500)
 
 
 @qdrant_bp.route('/stats', methods=['GET'])
 def get_stats():
     try:
-        client = QdrantClient(host=QDRANT_HOST, port=6333)
+        client = QdrantClient(host=settings.QDRANT_HOST, port=6333)
         collection_info = client.get_collection(collection_name="candidates")
         
         return jsonify({
@@ -54,7 +53,7 @@ def get_stats():
 @qdrant_bp.route('/clear', methods=['DELETE'])
 def clear_collection():
     try:
-        client = QdrantClient(host=QDRANT_HOST, port=6333)
+        client = QdrantClient(host=settings.QDRANT_HOST, port=6333)
         
         collection_info = client.get_collection(collection_name="candidates")
         points_count = collection_info.points_count
@@ -64,7 +63,7 @@ def clear_collection():
             points_selector=Filter(must=[])
         )
         
-        engine = create_engine(DB_URL)
+        engine = create_engine(settings.DATABASE_URL)
         with engine.connect() as conn:
             conn.execute(text("UPDATE candidates SET last_indexed_at = NULL"))
             conn.commit()
@@ -83,14 +82,14 @@ def clear_collection():
 @qdrant_bp.route('/rebuild', methods=['POST'])
 def rebuild_collection():
     try:
-        client = QdrantClient(host=QDRANT_HOST, port=6333)
+        client = QdrantClient(host=settings.QDRANT_HOST, port=6333)
         
         client.delete(
             collection_name="candidates",
             points_selector=Filter(must=[])
         )
         
-        engine = create_engine(DB_URL)
+        engine = create_engine(settings.DATABASE_URL)
         with engine.connect() as conn:
             conn.execute(text("UPDATE candidates SET last_indexed_at = NULL"))
             conn.commit()

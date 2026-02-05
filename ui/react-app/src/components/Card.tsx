@@ -6,12 +6,11 @@ interface CardProps {
   children?: ReactNode;
 }
 
-export const Card: React.FC<CardProps> = ({
+export const Card = ({
   title,
   subtitle,
   children,
-}) => {
-
+}:CardProps) => {
   return (
     <section className="card">
       {(title || subtitle) && (

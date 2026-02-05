@@ -6,7 +6,7 @@ from app.llm.tools import get_candidate_profile, search_similar_profiles, calcul
 from app.llm.prompt_loader import PromptLoader
 from app.llm.compression import ContextCompressor
 from app.core.config import settings
-import json, re
+import json, re, timeout_decorator
 
 
 class Agent:
@@ -14,7 +14,8 @@ class Agent:
         self.llm = ChatCohere(
             cohere_api_key=settings.COHERE_API_KEY,
             model=settings.MODEL_NAME,
-            temperature=settings.TEMPERATURE
+            temperature=settings.TEMPERATURE,
+            max_tokens=settings.MAX_TOKENS
         )
 
         self.tools = [
@@ -39,12 +40,14 @@ class Agent:
             agent=self.agent,
             tools=self.tools,
             verbose=True,
-            max_iterations=5
+            max_iterations=5,
         )
 
+    @timeout_decorator.timeout(settings.LLM_TIMEOUT)
     async def generate_insight(self, query: str):
         try:
             compressed_input = ContextCompressor.compress(query)
+            
             response = await self.agent_executor.ainvoke({
                 "input": compressed_input
             })
@@ -56,7 +59,6 @@ class Agent:
             if match:
                 json_str = match.group(0)
                 try:
-                    # 2. Convertir el string a un diccionario real de Python
                     data = json.loads(json_str)
                     return data
                 except json.JSONDecodeError:
@@ -69,5 +71,13 @@ class Agent:
                 "weaknesses": [],
                 "suggested_role": "N/A"
                 }
+        except Exception as e:
+            return {
+                'summary': f'Error: {str(e)}.', 
+                'score': 0, 
+                'strengths': [], 
+                'weaknesses': [], 
+                'suggested_role': 'N/A'
+            }
         except Exception as e:
             return f"Error: {str(e)}."
