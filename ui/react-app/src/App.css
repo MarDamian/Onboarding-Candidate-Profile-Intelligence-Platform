@@ -1,83 +1,162 @@
 .error {
-    color: red;
+  color: red;
 }
 
 .button {
-    padding: 0.2rem 0.5rem;
-    background-color: #2196F3;
-    color: white;
-    border: none;
-    border-radius: 0.2rem;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-    display: inline-block;
-    text-align: center;
+  padding: 0.2rem 0.5rem;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 0.2rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  display: inline-block;
+  text-align: center;
 }
 
 .button-edit {
-    background-color: #fbc02d;
-    color: #000;
+  background-color: #fbc02d;
+  color: #000;
 }
 
 .button-delete {
-    background-color: #f44336;
+  background-color: #f44336;
 }
 
 .button:hover {
-    filter: brightness(90%);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  filter: brightness(90%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .button:active {
-    transform: scale(0.98);
+  transform: scale(0.98);
 }
 
 .button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    box-shadow: none;
+  background-color: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 a {
-    text-decoration: none;
+  text-decoration: none;
+}
+
+.table-wrapper {
+  overflow: auto;
+  height: 25rem;
 }
 
 table {
-    border-collapse: collapse;
-    font-size: 0.95rem;
-    background-color: white;
-    box-shadow: 0 4px 6px rgba(66, 66, 66, 0.1);
-    border-radius: 0.2rem;
-    overflow: hidden;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(66, 66, 66, 0.1);
+  border-radius: 0.2rem;
 }
 
 thead tr {
-    background-color: #2196F3;
-    color: #ffffff;
-    text-align: left;
-    font-weight: 600;
+  background-color: #2196f3;
+  color: #ffffff;
+  text-align: left;
+  font-weight: 600;
 }
 
 th,
 td {
-    padding: 0.5rem;
+  padding: 0.5rem;
 }
 
 tbody tr {
-    transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 tbody tr:nth-of-type(even) {
-    background-color: #fafafa;
+  background-color: #fafafa;
 }
 
 tbody tr:hover {
-    background-color: #f5f9ff;
+  background-color: #f5f9ff;
 }
 
 h1 {
-    color: #333;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
 }
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #e6ecff;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+}
+
+.navbar-brand a {
+  font-size: 2rem;
+  color: #171717;
+  font-weight: 700;
+}
+
+.navbar-brand a:hover {
+  font-size: 2rem;
+  color: #4a4a4a;
+}
+
+.navbar-content {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+}
+
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.search-container {
+}
+
+.card {
+  background: var(--card-bg, white);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.card-subtitle {
+  margin-top: 0.25rem;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
