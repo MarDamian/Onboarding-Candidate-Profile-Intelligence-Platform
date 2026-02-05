@@ -1,3 +1,16 @@
+"""
+Estrategia de Prompt Compression:
+- Análisis de tokens: Contar tokens antes/después para optimizar.
+- Generación de resúmenes previos: Usar LLM para resumir secciones largas.
+- Eliminación de redundancias: Remover campos duplicados o irrelevantes.
+- Preprocesamiento: Filtrar contexto a lo esencial antes de enviar al LLM.
+
+Trade-offs:
+- Pros: Reduce costo (menos tokens), menor latencia, evita límites de contexto.
+- Cons: Posible pérdida de detalles sutiles, lo que podría afectar precisión en análisis complejos.
+  Ej: En perfiles largos, un resumen podría omitir skills raras. Mitigación: Threshold configurable para compresión mínima.
+"""
+
 from typing import Dict, Any, List
 import re
 
@@ -49,6 +62,21 @@ class ContextCompressor:
                 )
 
         return "\n".join(blocks)
+    
+    def preprocess_context(context: dict) -> dict:
+        """Preprocesamiento para reducir contexto antes de LLM.
+
+        Args:
+            context (dict): Datos del candidato
+
+        Returns:
+            dict: Datos con contexto reduccido
+        """
+        if 'skills' in context and isinstance(context['skills'], list):
+            context['skills'] = list(set(context['skills']))
+        if 'summary' in context and len(context['summary']) > 1000:
+            context['summary'] = context['summary'][:1000] + '...'
+        return context
 
     # -------------------------
     # Helpers
