@@ -9,6 +9,7 @@ export const ListPage = () => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [filteredCandidates, setFilteredCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const location = useLocation();
 
@@ -21,7 +22,8 @@ export const ListPage = () => {
         setCandidates(candidates);
         setFilteredCandidates(candidates);
       } catch (error) {
-        console.error("Error fetching candidates:", error);
+        setError("The candidates could not be uploaded. Please try again later.");
+        console.error(error)
       } finally {
         setLoading(false);
       }
@@ -57,15 +59,17 @@ export const ListPage = () => {
   }, [location.search, candidates]);
 
   const handleDelete = async (id: string) => {
-    try {
-      await CandidateService.deleteCandidate(id);
-      setCandidates(prev => prev.filter(c => c.id !== id));
-      alert("Candidate deleted successfully");
-    } catch (error) {
-      console.error("Error deleting candidate:", error);
-      alert("Failed to delete candidate");
+        if (!window.confirm("Are you sure you want to eliminate this candidate?")) return;
+
+        try {
+            await CandidateService.deleteCandidate(id);
+            setCandidates((prev) => prev.filter((c) => c.id !== id));
+            alert("Candidate successfully removed");
+        } catch (error) {
+            alert("Error deleting candidate");
+            console.error(error);
+        }
     }
-  }
 
   return (
     <main
