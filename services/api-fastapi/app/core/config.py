@@ -1,23 +1,24 @@
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
-from typing import Optional
 import os
 
-load_dotenv("../../infra/.env")
+load_dotenv()
 
 class Settings(BaseSettings):
      # API keys
     COHERE_API_KEY: str = os.getenv("COHERE_API_KEY")
-    LANGCHAIN_TRACING_V2: bool = False
-    LANGCHAIN_API_KEY: str = " "
+    LANGCHAIN_TRACING_V2: bool = os.getenv("LANGCHAIN_TRACING_V2")
+    LANGCHAIN_API_KEY: str = os.getenv("LANGCHAIN_API_KEY")
     
     # Configuración del LLM
-    MODEL_NAME: str = "command-a-03-2025"
-    TEMPERATURE: int = 0
+    MODEL_NAME: str = os.getenv("MODEL_NAME")
+    TEMPERATURE: int = os.getenv("TEMPERATURE")
+    LLM_TIMEOUT: int = os.getenv("LLM_TIMEOUT")
+    MAX_TOKENS: int = os.getenv("MAX_TOKENS")
     
     # Base de datos
     DATABASE_URL: str = os.getenv("DATABASE_URL")
     QDRANT_HOST: str = os.getenv("QDRANT_HOST")
-    QDRANT_PORT: int = 6333
+    QDRANT_PORT: int = os.getenv("QDRANT_PORT")
 
 settings = Settings()
