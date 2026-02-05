@@ -12,6 +12,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
       - ../infra/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - ../.env
 
   redis:
     image: redis:8.4.0-alpine
@@ -53,6 +55,8 @@ services:
     depends_on:
       - postgres_db
       - qdrant
+    env_file:
+      - ../.env
     command: sh -c "alembic upgrade head && python scripts/seed_db.py && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
   api-flask:
@@ -78,6 +82,8 @@ services:
       - qdrant
       - redis
       - postgres_db
+    env_file:
+      - ../.env
     command: gunicorn --bind 0.0.0.0:5000 --timeout 300 --workers 1 --reload run:app
 
   react-app:
@@ -95,6 +101,8 @@ services:
       - api-fastapi
     environment:
       - VITE_API_URL=${VITE_API_URL}
+    env_file:
+      - ../.env
       
 volumes:
   postgres_data:
