@@ -2,11 +2,13 @@ from datetime import datetime
 from pipelines.etl.extract import Extractor
 from pipelines.etl.transform import Transformer
 from pipelines.etl.load import Loader
-
+from dotenv import load_dotenv
 import os, redis, json
 
+load_dotenv()
+
 DB_URL = os.getenv("DATABASE_URL")
-QDRANT_HOST = os.getenv("QDRANT_HOST", "qdrant")
+QDRANT_HOST = os.getenv("QDRANT_HOST")
 REDIS_URL: str = os.getenv("REDIS_URL")
 
 r = redis.from_url(REDIS_URL)

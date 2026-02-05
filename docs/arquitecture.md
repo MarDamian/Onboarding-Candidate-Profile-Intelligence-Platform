@@ -87,12 +87,19 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 
 - **Estrategia de Seeds**: Los datos de prueba se gestionan mediante scripts de Python para mantener la consistencia con los tipos de datos definidos en los modelos de SQLAlchemy.
 
+### LLM y Embedding
+
+- **LLM**: Implementado con langchain y cohere.
+- **Embedding**: Para el embedding para no tener localmente por procesos pesados de espacio, se opto por api de cohere.
+
 ## Infraestructura
 
 ### Containerización
 - Servicios containerizados con Docker
 - Orquestación local mediante Docker Compose
-- Volúmenes compartidos: `../pipelines:/app/pipelines` en FastAPI y Flask
+- Volúmenes compartidos: 
+  - `../pipelines:/app/pipelines` en FastAPI y Flask
+  - `../prompts:/app/prompts` en FastAPI
 
 ### Imágenes Base
 - **PostgreSQL**: `postgres:17.5-alpine`

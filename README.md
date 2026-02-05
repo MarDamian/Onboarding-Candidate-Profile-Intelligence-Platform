@@ -15,7 +15,6 @@ Construir un sistema completamente funcional que permita:
 - Generar insights automáticos utilizando LLMs
 - Integrar un microfrontend especializado dentro de la aplicación principal
 
-
 ## Estado actual
 
 **Semana 1 – Día 1–2**
@@ -48,8 +47,8 @@ Ya con las bases establecidas, se procede a la implementación de los servicios 
   - Carga de settings
   - Reglas de ignore actualizadas
 - Integracion a a Docker
-    - Dockerfile.fastapi
-    - docker-compose.yml(api-fastapi service)
+  - Dockerfile.fastapi
+  - docker-compose.yml(api-fastapi service)
 - Especificacion de variables de entorno y requirements.txt
 
 Las funcionalidades de negocio (ETL, búsqueda semántica, LLM) se implementarán progresivamente en las siguientes fases.
@@ -115,10 +114,50 @@ Durante este día se implementa:
   - Variables de entorno para Qdrant configuradas
 - Actualización completa de documentación de API y arquitectura
 
+**Semana 2 - Día 9-10 LLM (Nivel Avanzado)**
+
+- **LLM orchestration**
+  - `PromptManager`: Carga y caching de prompts con versionado (v1, v2)
+  - `ContextManager`: Compresión inteligente de contexto
+  - `ErrorHandler`: Manejo centralizado de errores y fallbacks
+  - `Agent`: Orquestador principal completa
+- **Insights**
+  - Generación de resúmenes técnicos detallados (`generate_summary`)
+  - Scoring de compatibilidad candidato-vacante (`generate_score`)
+  - Análisis comparativo y posicionamiento en mercado (`generate_comparison`)
+  - Métodos auxiliares para extracción de datos (años exp, skills, percentiles)
+- **Schemas de Validación Pydantic**
+  - `InsightResponse`: respuesta unificada para todos los endpoints
+- **Endpoints REST Insights**
+  - `GET /v1/insights/{candidate_id}` - Insights generales con comparación opcional
+- **Prompts Versionados Avanzados**
+  - `prompts/candidate_summary/v1.txt` - Prompt base refinado
+  - `prompts/candidate_summary/v2.txt` - Prompt avanzado con análisis estratégico profundo
+  - `prompts/skill_extraction/v1.txt` - Extracción estructurada de skills (JSON)
+- **Integración Cohere LLM**
+  - Decisión por `command-a-03-2025` para superior reasoning
+  - Decisión por `embed-multilingual-light-v3.0` para embeddings multilingües
+  - ADR 005 documentando todas las decisiones arquitectónicas
+  - Migración planeada de embeddings locales a API Cohere (4 fases)
+- **Documentación Arquitectónica Completa**
+  - ADR 005: Decisiones sobre LLM y Embeddings API
+  - Actualización de `docs/api.md`
+
+**Semana 2 - Día 11-12 React UI Insights**
+
+- **Componentes React para Insights**
+  - `Insight.tsx` - Visualización de resumen técnico
+  - `Card.tsx` - Componente Card para uso
+- **Integración Frontend-Backend**
+  - Servicio `InsightService.ts` - Cliente TypeScript para endpoints
+  - Estados de carga, error y éxito
+  - Refresh automático
+- **UI/UX Mejorada**
+  - navbar mejorado y estilizado, se agrego buscador para la lista
+
 **Pendiente:**
 
-- Integración con LLM para generación de insights
-- Microfrontend en Svelte
+- Semana 3 — Microfrontend y Robustez
 
 ## Features (objetivo final)
 
@@ -132,6 +171,7 @@ Durante este día se implementa:
 ## Stack tecnológico
 
 ### Backend
+
 - **FastAPI**: API pública para CRUD de perfiles, búsqueda semántica e insights
   - Documentación automática con OpenAPI/Swagger
   - Validación de datos con Pydantic
@@ -142,6 +182,7 @@ Durante este día se implementa:
   - Gunicorn como servidor WSGI
 
 ### Data
+
 - **PostgreSQL 17.5**: Base de datos relacional principal
   - Almacenamiento de perfiles de candidatos
   - Gestión de timestamps para indexación incremental
@@ -155,6 +196,7 @@ Durante este día se implementa:
   - Generación automática de embeddings
 
 ### Vector & AI
+
 - **Qdrant v1.16.2**: Motor de búsqueda vectorial
   - Almacenamiento y búsqueda de embeddings de 384 dimensiones
   - Soporte para filtros combinados (skills, nombre)
@@ -163,17 +205,26 @@ Durante este día se implementa:
   - Modelo: `all-MiniLM-L6-v2` (optimizado para CPU)
   - Servicio centralizado de embeddings
   - Configuración dinámica vía variables de entorno
-- **LLMs**: Prompts versionados y generación de insights (pendiente)
+- **LLMs - Cohere**: Generación de insights avanzados
+  - Modelo: `command-a-03-2025` para superior reasoning y tareas complejas
+  - Embeddings API: `embed-multilingual-light-v3.0` para búsqueda multilingüe
+  - Arquitectura SOLID con 6 componentes especializados
+  - Servicio de Insights con 3 tipos de análisis (summary, score, comparison)
+  - Prompts versionados para A/B testing
 
 ### Frontend
+
 - **React + TypeScript**: Interfaz principal
   - Vite como bundler y dev server
   - React Router para navegación
   - Gestión de estado con hooks
   - Componentes para CRUD completo
+  - Componentes de Insights (ScoringCard, ComparisonChart, SkillsAssessment)
+  - Hooks personalizados (useInsights, useScoring, useComparison)
 - **Svelte**: Microfrontend especializado integrado en React (pendiente)
 
 ### Infraestructura
+
 - **Docker & Docker Compose**: Orquestación de servicios
   - Postgres, Redis, Qdrant, FastAPI, Flask, React
   - Volúmenes para persistencia de datos
@@ -183,48 +234,58 @@ Durante este día se implementa:
 
 ## Servicios y puertos
 
-| Servicio | Puerto | Descripción |
-|----------|--------|-------------|
-| FastAPI | 8000 | API REST para CRUD de candidatos |
-| Flask | 5000 | API administrativa (ETL + búsqueda semántica) |
-| React | 5173 | Interfaz de usuario web |
-| PostgreSQL | 5433 | Base de datos relacional |
-| Redis | 6379 | Cache y cola de jobs |
-| Qdrant | 6333 | Motor de búsqueda vectorial |
+| Servicio   | Puerto | Descripción                                   |
+| ---------- | ------ | --------------------------------------------- |
+| FastAPI    | 8000   | API REST para CRUD de candidatos              |
+| Flask      | 5000   | API administrativa (ETL + búsqueda semántica) |
+| React      | 5173   | Interfaz de usuario web                       |
+| PostgreSQL | 5433   | Base de datos relacional                      |
+| Redis      | 6379   | Cache y cola de jobs                          |
+| Qdrant     | 6333   | Motor de búsqueda vectorial                   |
 
 ## Endpoints principales
 
 ### FastAPI (Puerto 8000)
+
 - `GET /v1/candidates/` - Listar candidatos
 - `POST /v1/candidates/` - Crear candidato
-- `GET /v1/candidates/{id}` - Obtener candidato
-- `PUT /v1/candidates/{id}` - Actualizar candidato
-- `DELETE /v1/candidates/{id}` - Eliminar candidato
+- `GET /v1/candidates/{candidate_id}` - Obtener candidato
+- `PUT /v1/candidates/{candidate_id}` - Actualizar candidato
+- `DELETE /v1/candidates/{candidate_id}` - Eliminar candidato
 - `GET /docs` - Documentación Swagger/OpenAPI
+- `POST /v1/semantic_search/` - Busqueda semantica para encontrar candidatos
+- `GET /v1/semantic_search/similar/{candidate_id}` - Busqueda por similitud de varios candidatos del candidato elegido
+- `GET /v1/insights/{candidate_id}` - Insights generales del candidato
+- `POST /v1/insights/score` - Scoring de compatibilidad candidato-vacante
+- `POST /v1/insights/summary` - Resumen técnico comprensivo
+- `GET /v1/insights/{candidate_id}/comparison` - Análisis comparativo vs mercado
+- `GET /v1/insights/health` - Estado del servicio de insights
 
 ### Flask (Puerto 5000)
+
 - `POST /v1/admin/etl/sync` - Ejecutar pipeline ETL completo
 - `GET /v1/admin/etl/status` - Consultar estado de job ETL
-- `POST /v1/search/` - Búsqueda semántica por texto
-- `GET /v1/search/similar/{id}` - Candidatos similares
 - `POST /v1/admin/qdrant/reindex` - Re-indexar todos los candidatos
 - `GET /v1/admin/qdrant/stats` - Estadísticas de Qdrant
 
 ## Inicio rápido
 
 ### Prerrequisitos
+
 - Docker y Docker Compose instalados
 - Git para clonar el repositorio
 
 ### Pasos para levantar el proyecto
 
 1. **Clonar el repositorio**
+
 ```bash
 git clone <repository-url>
 cd Onboarding-Candidate-Profile-Intelligence-Platform
 ```
 
 2. **Configurar variables de entorno**
+
 ```bash
 cd infra
 cp .env.example .env
@@ -232,11 +293,13 @@ cp .env.example .env
 ```
 
 3. **Levantar todos los servicios**
+
 ```bash
-docker compose up --build
+docker compose up
 ```
 
 4. **Acceder a los servicios**
+
 - UI React: http://localhost:5173
 - API FastAPI: http://localhost:8000/docs
 - API Flask: http://localhost:5000
@@ -245,6 +308,7 @@ docker compose up --build
 ### Inicialización automática
 
 Al levantar los servicios, se ejecutan automáticamente:
+
 - **Migraciones de Alembic**: Crean/actualizan la estructura de la base de datos
 - **Seed de datos**: Insertan candidatos de ejemplo para pruebas
 - **Colección Qdrant**: Se crea automáticamente al ejecutar el primer ETL
@@ -275,7 +339,16 @@ services/
 │   │   ├── core/                  # Configuración
 │   │   ├── db/                    # Modelos y conexión
 │   │   ├── schemas/               # Validación con Pydantic
-│   │   └── main.py 
+│   │   ├── candidate.py           # Schemas de candidatos
+│   │   ├── search.py              # Schemas de búsqueda
+│   │   └── insights.py            # Schemas de insights (9 modelos Pydantic)
+│   │   ├── llm/
+│   │   │   ├── agent.py                   # Orquestador LLM con SOLID
+│   │   │   ├── insight_service.py         # Lógica de generación de insights
+│   │   │   ├── compression.py             # Compresión de contexto
+│   │   │   ├── prompt_loader.py           # Carga de prompts
+│   │   │   └── tools.py                   # Herramientas para LLM
+│   │   └── main.py
 │   ├── scripts/
 │   │   └── seed_db.py             # Script de datos semilla
 │   ├── requirements.txt
@@ -294,9 +367,27 @@ ui/
 └── react-app/                     # Interfaz de usuario
     ├── src/
     │   ├── components/            # Componentes reutilizables
+    │   │   ├── CandidateCRUD.tsx
+    │   │   ├── SearchResults.tsx
+    │   │   ├── InsightsSummary.tsx
+    │   │   ├── ScoringCard.tsx
+    │   │   ├── ComparisonChart.tsx
+    │   │   └── SkillsAssessment.tsx
     │   ├── pages/                 # Páginas de la aplicación
+    │   │   ├── Create.tsx
+    │   │   ├── Edit.tsx
+    │   │   ├── List.tsx
+    │   │   ├── Show.tsx
+    │   │   └── InsightsPage.tsx
     │   ├── services/              # Cliente API
+    │   │   ├── ApiCandidate.ts
+    │   │   └── InsightsApiService.ts
+    │   ├── hooks/                 # Hooks personalizados
+    │   │   ├── useInsights.ts
+    │   │   ├── useScoring.ts
+    │   │   └── useComparison.ts
     │   └── types/                 # Tipos TypeScript
+    │       └── candidate.ts
     ├── package.json
     └── vite.config.ts
 
@@ -321,24 +412,38 @@ prompts/
 - **[Arquitectura](docs/arquitecture.md)**: Decisiones de diseño y patrones utilizados
 - **[API Reference](docs/api.md)**: Documentación completa de endpoints
 - **[ADRs](docs/adrs/)**: Decisiones arquitectónicas registradas
+  - **ADR 005**: [Integración de LLM Cohere y Embeddings API](docs/adrs/005-llm-embedding-decision.md)
+  - **ADR 004**: Vector Search con Qdrant
+  - **ADR 003**: Refactor de búsqueda semántica
+  - **ADR 002**: Migraciones de base de datos
+  - **ADR 001**: Manejo descentralizado de errores
+- **[SOLID Validation](docs/SOLID-validation.md)**: Prueba de cumplimiento de principios SOLID
+- **[Implementation Checklist](docs/IMPLEMENTATION-CHECKLIST.md)**: Verificación de requisitos implementados
 
 ## Próximos pasos
 
 Para continuar con el desarrollo del proyecto:
 
-1. **Integración con LLM**
-   - Generación de resúmenes de candidatos
-   - Extracción inteligente de skills
-   - Sistema de scoring automatizado
+1. **Testing & Optimizaciones (Semana 3)**
+   - Suite completa de unit tests para componentes LLM
+   - Tests de integración para endpoints de insights
+   - Implementación de caching con Redis
+   - Rate limiting y quota management
 
-2. **Microfrontend en Svelte**
+2. **Monitoreo y Observabilidad**
+   - Dashboards Grafana para métricas de insights
+   - Alertas para latencia y costo de tokens
+   - Logging centralizado con ELK
+
+3. **Microfrontend en Svelte**
    - Vista especializada de análisis de candidatos
    - Integración con la aplicación React principal
+   - Module Federation para carga lazy
 
-3. **Optimizaciones**
-   - Caching de embeddings
-   - Procesamiento batch asíncrono
-   - Monitoreo y logging centralizado
+4. **Optimizaciones de Cohere API**
+   - Migración de embeddings locales a Cohere (4 fases)
+   - Fine-tuning de prompts con feedback
+   - A/B testing de modelos y temperaturas
 
 ## Contribuciones
 

@@ -42,12 +42,14 @@ services:
     volumes:
       - ../services/api-fastapi:/app
       - ../pipelines:/app/pipelines
+      - ../prompts:/app/prompts
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
       - QDRANT_HOST=qdrant
       - EMBEDDING_MODEL=${EMBEDDING_MODEL}
       - EMBEDDING_DIMENSION=${EMBEDDING_DIMENSION}
       - EMBEDDING_DISTANCE=${EMBEDDING_DISTANCE}
+      - COHERE_API_KEY=${COHERE_API_KEY}
     depends_on:
       - postgres_db
       - qdrant
@@ -71,6 +73,7 @@ services:
       - EMBEDDING_MODEL=${EMBEDDING_MODEL}
       - EMBEDDING_DIMENSION=${EMBEDDING_DIMENSION}
       - EMBEDDING_DISTANCE=${EMBEDDING_DISTANCE}
+      - COHERE_API_KEY=${COHERE_API_KEY}
     depends_on:
       - qdrant
       - redis

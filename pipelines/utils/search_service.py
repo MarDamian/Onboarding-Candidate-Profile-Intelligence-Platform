@@ -1,5 +1,5 @@
 from qdrant_client import QdrantClient
-from qdrant_client.models import Filter, FieldCondition, MatchValue, Range
+from qdrant_client.models import Filter, FieldCondition, MatchValue, MatchText, MatchAny
 from pipelines.utils.embeddings_service import EmbeddingsService
 from typing import Optional
 
@@ -39,28 +39,40 @@ class SearchService:
             Lista de candidatos ordenados por relevancia con sus scores
         """
 
-        query_vector = self.embeddings_service.generate_embedding(query_text)
+        query_vector = self.embeddings_service.generate_embedding(
+            query_text, 
+            input_type="search_query"
+        )
         
-        filter_conditions = []
+        must_conditions = []
+        should_conditions = []
         
         if skills_filter:
+            # Skills con OR: debe tener AL MENOS UNA de las skills
             for skill in skills_filter:
-                filter_conditions.append(
+                should_conditions.append(
                     FieldCondition(
                         key="text_content",
-                        match=MatchValue(value=skill)
+                        match=MatchText(text=skill)
                     )
                 )
         
         if name_filter:
-            filter_conditions.append(
+            # Name con AND: debe cumplir el nombre
+            must_conditions.append(
                 FieldCondition(
                     key="name",
-                    match=MatchValue(value=name_filter)
+                    match=MatchText(text=name_filter)
                 )
             )
         
-        query_filter = Filter(should=filter_conditions) if filter_conditions else None
+        # Construir filtro: must (AND) para nombre, should (OR) para skills
+        query_filter = None
+        if must_conditions or should_conditions:
+            query_filter = Filter(
+                must=must_conditions if must_conditions else None,
+                should=should_conditions if should_conditions else None
+            )
         
         search_result = self.client.query_points(
             collection_name=self.collection_name,

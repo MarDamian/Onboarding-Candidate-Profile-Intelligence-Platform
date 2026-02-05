@@ -11,11 +11,9 @@ def create_app():
 
     from app.api.etl_routes import etl_bp
     from app.api.qdrant_routes import qdrant_bp
-    from app.api.search_routes import search_bp
     
     app.register_blueprint(etl_bp)
     app.register_blueprint(qdrant_bp)
-    app.register_blueprint(search_bp)
 
     @app.route('/health')
     def health():

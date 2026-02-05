@@ -20,7 +20,7 @@ class Transformer:
         """
         context_text = f"{candidate.name} | {candidate.summary} | Skills: {candidate.skills} | Experience: {candidate.experience}"
         
-        vector = self.embeddings_service.generate_embedding(context_text)
+        vector = self.embeddings_service.generate_embedding(context_text, input_type="search_document")
         
         return {
             "id": candidate.id,
