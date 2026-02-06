@@ -47,7 +47,7 @@ def get_candidate(candidate_id: int, db: Session = Depends(get_db)):
     }
 )
 def create_candidate(candidate: CandidateCreate, db: Session = Depends(get_db)):
-    new_candidate = Candidate(**candidate.dict())
+    new_candidate = Candidate(**candidate.model_dump())
     db.add(new_candidate)
     db.commit()
     db.refresh(new_candidate)
@@ -108,13 +108,14 @@ def update_candidate(candidate_id: int, candidate: CandidateUpdate, db: Session 
     "/{candidate_id}", 
     response_model=CandidateRead, 
     responses={
-        204: {"description": "Candidate deleted successfully"},
+        200: {"description": "Candidate deleted successfully"},
         404: {"description": "Candidate not found"}
     }
 )
 def delete_candidate(candidate_id: int, db: Session = Depends(get_db)):
     candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
-    if candidate:
-        db.delete(candidate)
-        db.commit()
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    db.delete(candidate)
+    db.commit()
     return candidate

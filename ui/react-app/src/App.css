@@ -125,9 +125,6 @@ h1 {
   gap: 0.5rem;
 }
 
-.search-container {
-}
-
 .card {
   background: var(--card-bg, white);
   border-radius: 0.5rem;

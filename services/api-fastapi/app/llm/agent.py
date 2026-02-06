@@ -71,9 +71,9 @@ class Agent:
                 "weaknesses": [],
                 "suggested_role": "N/A"
                 }
-        except Exception as e:
+        except timeout_decorator.TimeoutError:
             return {
-                'summary': f'Error: {str(e)}.', 
+                'summary': 'Timeout: Insight generation took too long..', 
                 'score': 0, 
                 'strengths': [], 
                 'weaknesses': [], 
