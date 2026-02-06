@@ -6,8 +6,7 @@ from pipelines.utils.search_service import SearchService
 router = APIRouter(prefix="/semantic_search", tags=["search"])
 
 search_service = SearchService(
-    qdrant_host=settings.QDRANT_HOST,
-    qdrant_port=settings.QDRANT_PORT
+    qdrant_url=settings.QDRANT_URL
 )
  
 @router.post("/")

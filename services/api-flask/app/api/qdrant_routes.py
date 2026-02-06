@@ -1,22 +1,21 @@
 from flask import Blueprint, jsonify, make_response
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter
-from pipelines.etl.main import run_pipeline
+from pipelines.etl.main import DB_URL, run_pipeline
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
 qdrant_bp = Blueprint('qdrant', __name__, url_prefix='/v1/admin/qdrant')
 
-engine = create_engine(settings.DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @qdrant_bp.route('/reindex', methods=['POST'])
 def reindex_all():
     try:
-        with SessionLocal() as db:
-            db.execute(text("UPDATE candidates SET last_indexed_at = NULL"))
-            db.commit()
+        engine = create_engine(DB_URL)
+        with engine.connect() as conn:
+            conn.execute(text("UPDATE candidates SET last_indexed_at = NULL"))
+            conn.commit()
         
         result = run_pipeline()
         
@@ -34,7 +33,7 @@ def reindex_all():
 @qdrant_bp.route('/stats', methods=['GET'])
 def get_stats():
     try:
-        client = QdrantClient(host=settings.QDRANT_HOST, port=6333)
+        client = QdrantClient(url=settings.QDRANT_URL)
         collection_info = client.get_collection(collection_name="candidates")
         
         return jsonify({
@@ -53,7 +52,7 @@ def get_stats():
 @qdrant_bp.route('/clear', methods=['DELETE'])
 def clear_collection():
     try:
-        client = QdrantClient(host=settings.QDRANT_HOST, port=6333)
+        client = QdrantClient(url=settings.QDRANT_URL)
         
         collection_info = client.get_collection(collection_name="candidates")
         points_count = collection_info.points_count
@@ -82,7 +81,7 @@ def clear_collection():
 @qdrant_bp.route('/rebuild', methods=['POST'])
 def rebuild_collection():
     try:
-        client = QdrantClient(host=settings.QDRANT_HOST, port=6333)
+        client = QdrantClient(url=settings.QDRANT_URL)
         
         client.delete(
             collection_name="candidates",

@@ -35,4 +35,10 @@ class EmbeddingsService:
             embedding_types=['float']
         )
 
-        return response.embeddings.float[0]
+        vector = response.embeddings.float[0]
+
+        # Validar que la dimensión del vector generado coincide con la esperada
+        if len(vector) != int(self.dimension):
+            raise ValueError(f"Dimensión del vector generada ({len(vector)}) no coincide con la esperada ({self.dimension}).")
+
+        return vector

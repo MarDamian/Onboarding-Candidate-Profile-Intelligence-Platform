@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from app.llm.agent import Agent
 from app.db.database import SessionLocal
 from app.db.models.candidate import Candidate
@@ -12,8 +12,13 @@ async def generate_candidate_insights(candidate_id: int):
     Endpoint para visualizar insights en la UI de React.
     """
     db = SessionLocal()
-    candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
-    db.close()
+    try:
+        candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
+    finally:
+        db.close()
+    
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidate not found")
     
     candidate_dict = {
         "summary": candidate.summary,

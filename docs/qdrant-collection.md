@@ -3,25 +3,25 @@
 ## Información General
 
 - **Nombre de la colección**: `candidates`
-- **Dimensión de vectores**: Configurable via `EMBEDDING_DIMENSION` (default: 384)
+- **Dimensión de vectores**: Configurable via `EMBEDDING_DIMENSION` (default: 1024)
 - **Función de distancia**: Configurable via `EMBEDDING_DISTANCE` (default: Cosine)
-- **Modelo de embeddings**: Configurable via `EMBEDDING_MODEL` (default: all-MiniLM-L6-v2)
+- **Modelo de embeddings**: Configurable via `EMBEDDING_MODEL` (default: embed-multilingual-v3.0)
 
 ### Variables de Entorno
 
-Todas las configuraciones de embeddings se gestionan mediante variables de entorno definidas en `infra/.env`:
+Todas las configuraciones de embeddings se gestionan mediante variables de entorno definidas en `.env`:
 
 ```bash
-EMBEDDING_MODEL=all-MiniLM-L6-v2
-EMBEDDING_DIMENSION=384
+EMBEDDING_MODEL="embed-multilingual-v3.0"
+EMBEDDING_DIMENSION=1024
 EMBEDDING_DISTANCE=Cosine
 ```
 
 **Opciones disponibles:**
-- **EMBEDDING_MODEL**: Cualquier modelo de sentence-transformers
-  - `all-MiniLM-L6-v2` (384 dims, rápido, CPU)
-  - `paraphrase-multilingual-MiniLM-L12-v2` (384 dims, multilenguaje)
-  - `all-mpnet-base-v2` (768 dims, mejor calidad)
+- **EMBEDDING_MODEL**: Cualquier modelo de embeddings de Cohere
+  - `embed-multilingual-v3.0` (1024 dims, multilenguaje, recomendado)
+  - `embed-english-v3.0` (1024 dims, solo inglés)
+  - `embed-multilingual-light-v3.0` (384 dims, más ligero)
   
 - **EMBEDDING_DISTANCE**: Métrica de similitud
   - `Cosine` - Similitud coseno (recomendado)
@@ -36,7 +36,7 @@ EMBEDDING_DISTANCE=Cosine
 
 ### Vector
 
-Cada candidato se representa como un vector de 384 dimensiones generado por `sentence-transformers` a partir del texto contextual:
+Cada candidato se representa como un vector de 1024 dimensiones generado por la API de Cohere a partir del texto contextual:
 
 ```
 {candidate.name} | {candidate.summary} | Skills: {candidate.skills} | Experience: {candidate.experience}
@@ -80,7 +80,7 @@ vector = embeddings_service.generate_embedding(context_text)
 ### 3. Carga (load.py)
 ```python
 # Leer configuración desde variables de entorno
-dimension = int(os.getenv("EMBEDDING_DIMENSION", "384"))
+dimension = int(os.getenv("EMBEDDING_DIMENSION", "1024"))
 distance = os.getenv("EMBEDDING_DISTANCE", "Cosine")
 
 # Crear/verificar colección con configuración dinámica
@@ -101,7 +101,7 @@ UPDATE candidates SET last_indexed_at = NOW() WHERE id IN (...)
 
 ## Búsqueda Semántica
 
-### Endpoint: POST /v1/search/
+### Endpoint: POST /v1/semantic_search/
 
 **Request Body:**
 ```json
@@ -137,7 +137,7 @@ UPDATE candidates SET last_indexed_at = NOW() WHERE id IN (...)
 |-----------|------|---------|-------------|
 | `query` | string | **requerido** | Texto de búsqueda en lenguaje natural |
 | `limit` | int | 10 | Número máximo de resultados (1-50) |
-| `score_threshold` | float | 0.5 | Umbral mínimo de similitud (0.0-1.0) |
+| `score_threshold` | float | 0.2 | Umbral mínimo de similitud (0.0-1.0) |
 | `skills_filter` | list[string] | null | Filtrar por skills específicas |
 | `name_filter` | string | null | Filtrar por nombre del candidato |
 
@@ -152,13 +152,13 @@ UPDATE candidates SET last_indexed_at = NOW() WHERE id IN (...)
 
 ## Endpoint Adicional: Buscar Similares
 
-### Endpoint: GET /v1/search/similar/{candidate_id}
+### Endpoint: GET /v1/semantic_search/similar/{candidate_id}
 
 Encuentra candidatos similares a uno existente.
 
 **Request:**
 ```
-GET /v1/search/similar/5?limit=5&score_threshold=0.6
+GET /v1/semantic_search/similar/5?limit=5&score_threshold=0.6
 ```
 
 **Response:**
@@ -210,17 +210,17 @@ Para re-indexar todos los candidatos (forzar sincronización completa):
 
 ### Modelo de Embeddings
 
-**Actual:** `all-MiniLM-L6-v2`
-- Dimensiones: 384
-- Tamaño: ~80MB
-- Velocidad: ~2000 sentencias/segundo (CPU)
+**Actual:** `embed-multilingual-v3.0` (API de Cohere)
+- Dimensiones: 1024
+- Multilenguaje
+- Sin carga local (Cloud API)
 
 **Alternativas:**
 
-| Modelo | Dimensiones | Tamaño | Uso |
-|--------|-------------|--------|-----|
-| `paraphrase-MiniLM-L3-v2` | 384 | ~60MB | Más rápido, menor calidad |
-| `all-mpnet-base-v2` | 768 | ~420MB | Mejor calidad, más lento |
+| Modelo | Dimensiones | Uso |
+|--------|-------------|-----|
+| `embed-multilingual-light-v3.0` | 384 | Más rápido, menor calidad |
+| `embed-english-v3.0` | 1024 | Solo inglés, mejor calidad en EN |
 
 ### Indexación Incremental
 

@@ -63,6 +63,7 @@ class ContextCompressor:
 
         return "\n".join(blocks)
     
+    @staticmethod
     def preprocess_context(context: dict) -> dict:
         """Preprocesamiento para reducir contexto antes de LLM.
 

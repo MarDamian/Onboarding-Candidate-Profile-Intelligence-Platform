@@ -1,19 +1,12 @@
 from langchain.tools import tool
 from app.db.database import SessionLocal
 from app.db.models.candidate import Candidate
-from pipelines.utils.search_service import SearchService
-from typing import List, Type
 import os, httpx
 import pydantic
 from langchain_core.prompts import ChatPromptTemplate
 from app.llm.prompt_loader import PromptLoader
 from app.llm.compression import ContextCompressor
 from langchain_cohere import ChatCohere
-
-search_service = SearchService(
-    qdrant_host=os.getenv("QDRANT_HOST", "qdrant"), 
-    qdrant_port=6333
-)
 
 SEARCH_API_URL = os.getenv("SEARCH_API_URL", "http://127.0.0.1:8000/v1")
 

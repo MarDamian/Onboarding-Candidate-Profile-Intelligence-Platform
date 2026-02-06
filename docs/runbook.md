@@ -25,7 +25,7 @@ cd Onboarding-Candidate-Profile-Intelligence-Platform
 ### 2. Configurar las variables de entorno:
 El proyecto utiliza variables de entorno para configuración de servicios y embeddings.
 ```bash
-cp infra/.env.example infra/.env
+cp .env.example .env
 ```
 Modifica el archivo `.env` si necesitas cambiar:
 - Credenciales de base de datos
@@ -35,10 +35,19 @@ Modifica el archivo `.env` si necesitas cambiar:
 ### 3. Levantar servicios con Docker
 Para iniciar todos los servicios del proyecto:
 ```bash
-cd ./infra/
+docker compose -f infra/docker-compose.yml --env-file .env build
 
-docker compose up
+docker compose -f infra/docker-compose.yml --env-file .env up 
 ```
+
+**Nota:** Si tienes problemas dedependencias en `package.json` (u otro servicio), usá el flag `-V` para recrear los volúmenes anónimos y evitar que Docker reutilice un `node_modules` desactualizado:
+
+```bash
+docker compose -f infra/docker-compose.yml up  -V --build 
+
+docker compose -f infra/docker-compose.yml --env-file .env up -d
+```
+
 Esto levantará los siguientes servicios en segundo plano:
 - PostgreSQL (Base de datos relacional)
 - Redis (Cache y tracking de jobs ETL)
@@ -94,4 +103,4 @@ git checkout -b feature/{feature-name}
 - Todas las modificaciones de modelos deben incluir migración
 - Las migraciones y seeds se ejecutan automáticamente en `docker compose up`
 - Para re-indexar Qdrant manualmente: `POST http://localhost:5000/v1/admin/qdrant/reindex`
-- Configuración de embeddings se gestiona en `infra/.env`
+- Configuración de embeddings se gestiona en `.env`

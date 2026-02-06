@@ -17,12 +17,4 @@ html {
 
 body {
     display: flex;
-    flex-direction: column;
 }
-
-main {
-    padding-top: 1rem;
-    width: 100%;
-    min-width: 100%;
-}
-

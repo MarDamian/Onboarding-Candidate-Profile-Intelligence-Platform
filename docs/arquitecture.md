@@ -19,7 +19,7 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
   - Interfaz principal construida con React y TypeScript.
   - **Gestión de Formularios**: Implementación de `react-hook-form` para validaciones eficientes y manejo de estado.
   - **Diseño y Estilo**: Sistema de estilos moderno con CSS optimizado, incluyendo tablas con zebra-striping, efectos de hover y diseño responsivo.
-  - **Arquitectura de Red**: Capa de servicios centralizada (`ApiCandidate.tsx`) con gestión de errores y estados de carga (`loading`) descentralizados directamente en los componentes de página para mayor precisión visual.
+  - **Arquitectura de Red**: Capa de servicios centralizada (`CandidateService.ts`) con gestión de errores y estados de carga (`loading`) descentralizados directamente en los componentes de página para mayor precisión visual.
   - Consume la API pública expuesta por FastAPI.
 
 > En fases posteriores se integrará un microfrontend en Svelte para vistas especializadas.
@@ -45,17 +45,16 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 
 - **ETL Pipeline**
   - **Extract**: Obtiene candidatos no indexados de PostgreSQL
-  - **Transform**: Genera embeddings usando `sentence-transformers`
+  - **Transform**: Genera embeddings usando la API de Cohere
   - **Load**: Indexa en Qdrant y marca como procesados
   - Idempotencia garantizada con `last_indexed_at`
 
 - **Embeddings Service**
-  - Servicio centralizado para generación de vectores
-  - Modelo configurable via `EMBEDDING_MODEL` (default: all-MiniLM-L6-v2)
-  - Dimensión configurable via `EMBEDDING_DIMENSION` (default: 384)
+  - Servicio centralizado para generación de vectores via API de Cohere
+  - Modelo configurable via `EMBEDDING_MODEL` (default: embed-multilingual-v3.0)
+  - Dimensión configurable via `EMBEDDING_DIMENSION` (default: 1024)
   - Distancia configurable via `EMBEDDING_DISTANCE` (default: Cosine)
-  - Optimizado para CPU
-  - Warning de deprecación suprimido
+  - Cloud API (sin carga local de modelos)
 
 - **Search Service**
   - Búsqueda semántica en Qdrant
@@ -109,4 +108,4 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 
 ### Startup Automático
 - **FastAPI**: Ejecuta migraciones → seed → servidor
-- **Flask**: Workers con timeout extendido para cargar modelos ML
+- **Flask**: Workers con timeout extendido para procesos ETL de larga duración
