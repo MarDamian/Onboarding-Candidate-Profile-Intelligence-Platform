@@ -268,57 +268,12 @@ Durante este día se implementa:
 - `POST /v1/admin/qdrant/reindex` - Re-indexar todos los candidatos
 - `GET /v1/admin/qdrant/stats` - Estadísticas de Qdrant
 
-## Inicio rápido
-
-### Prerrequisitos
-
-- Docker y Docker Compose instalados
-- Git para clonar el repositorio
-
-### Pasos para levantar el proyecto
-
-1. **Clonar el repositorio**
-
-```bash
-git clone <repository-url>
-cd Onboarding-Candidate-Profile-Intelligence-Platform
-```
-
-2. **Configurar variables de entorno**
-
-```bash
-cd infra
-cp .env.example .env
-# Editar .env con tus configuraciones
-```
-
-3. **Levantar todos los servicios**
-
-```bash
-docker compose up
-```
-
-4. **Acceder a los servicios**
-
-- UI React: http://localhost:5173
-- API FastAPI: http://localhost:8000/docs
-- API Flask: http://localhost:5000
-- Qdrant Dashboard: http://localhost:6333/dashboard
-
-### Inicialización automática
-
-Al levantar los servicios, se ejecutan automáticamente:
-
-- **Migraciones de Alembic**: Crean/actualizan la estructura de la base de datos
-- **Seed de datos**: Insertan candidatos de ejemplo para pruebas
-- **Colección Qdrant**: Se crea automáticamente al ejecutar el primer ETL
-
 ## Estructura del proyecto
 
 ```text
 docs/
 ├── adr/                           # Architecture Decision Records
-├── onboarding.md                  # Guía de onboarding técnico
+├── runbook.md                     # Guía de ejecucion y uso
 ├── arquitecture.md                # Documentación de arquitectura
 ├── api.md                         # Documentación de endpoints
 └── qdrant-collection.mb           # Documentacion de qdrant
@@ -339,18 +294,8 @@ services/
 │   │   ├── core/                  # Configuración
 │   │   ├── db/                    # Modelos y conexión
 │   │   ├── schemas/               # Validación con Pydantic
-│   │   ├── candidate.py           # Schemas de candidatos
-│   │   ├── search.py              # Schemas de búsqueda
-│   │   └── insights.py            # Schemas de insights (9 modelos Pydantic)
-│   │   ├── llm/
-│   │   │   ├── agent.py                   # Orquestador LLM con SOLID
-│   │   │   ├── insight_service.py         # Lógica de generación de insights
-│   │   │   ├── compression.py             # Compresión de contexto
-│   │   │   ├── prompt_loader.py           # Carga de prompts
-│   │   │   └── tools.py                   # Herramientas para LLM
-│   │   └── main.py
+│   │   └──  llm/
 │   ├── scripts/
-│   │   └── seed_db.py             # Script de datos semilla
 │   ├── requirements.txt
 │   └── alembic.ini
 │
@@ -358,7 +303,7 @@ services/
 │   ├── app/
 │   │   ├── api/                   # Rutas de ETL
 │   │   ├── core/                  # Configuración
-│   │   ├──services/              # Lógica de ETL
+│   │   ├── services/              # Lógica de ETL
 │   │   └── __init__.py
 │   ├── requirements.txt
 │   └── run.py
@@ -367,39 +312,15 @@ ui/
 └── react-app/                     # Interfaz de usuario
     ├── src/
     │   ├── components/            # Componentes reutilizables
-    │   │   ├── CandidateCRUD.tsx
-    │   │   ├── SearchResults.tsx
-    │   │   ├── InsightsSummary.tsx
-    │   │   ├── ScoringCard.tsx
-    │   │   ├── ComparisonChart.tsx
-    │   │   └── SkillsAssessment.tsx
     │   ├── pages/                 # Páginas de la aplicación
-    │   │   ├── Create.tsx
-    │   │   ├── Edit.tsx
-    │   │   ├── List.tsx
-    │   │   ├── Show.tsx
-    │   │   └── InsightsPage.tsx
     │   ├── services/              # Cliente API
-    │   │   ├── ApiCandidate.ts
-    │   │   └── InsightsApiService.ts
-    │   ├── hooks/                 # Hooks personalizados
-    │   │   ├── useInsights.ts
-    │   │   ├── useScoring.ts
-    │   │   └── useComparison.ts
     │   └── types/                 # Tipos TypeScript
-    │       └── candidate.ts
     ├── package.json
     └── vite.config.ts
 
 pipelines/
 ├── etl/                           # Pipeline ETL modular
-│   ├── extract.py                 # Extracción de datos
-│   ├── transform.py               # Transformación y embeddings
-│   ├── load.py                    # Carga a Qdrant
-│   └── main.py                    # Orquestador del pipeline
-└── utils/
-    ├── embeddings_service.py      # Servicio de generación de embeddings
-    └── search_service.py          # Serrvicio de busqueda con qdrant
+└── utils/                         # Servicios de Embedding y busqueda Semantica
 
 prompts/
 ├── candidate_summary/             # Prompts versionados para resúmenes
@@ -408,17 +329,15 @@ prompts/
 
 ## Documentación adicional
 
-- **[Onboarding técnico](docs/onboarding.md)**: Guía paso a paso para nuevos desarrolladores
+- **[Ejecucion Inicial](docs/runbook.mdmd)**: Guía paso a paso para nuevos desarrolladores
 - **[Arquitectura](docs/arquitecture.md)**: Decisiones de diseño y patrones utilizados
 - **[API Reference](docs/api.md)**: Documentación completa de endpoints
 - **[ADRs](docs/adrs/)**: Decisiones arquitectónicas registradas
-  - **ADR 005**: [Integración de LLM Cohere y Embeddings API](docs/adrs/005-llm-embedding-decision.md)
+  - **ADR 005**: Integración de LLM Cohere y Embeddings API
   - **ADR 004**: Vector Search con Qdrant
   - **ADR 003**: Refactor de búsqueda semántica
   - **ADR 002**: Migraciones de base de datos
   - **ADR 001**: Manejo descentralizado de errores
-- **[SOLID Validation](docs/SOLID-validation.md)**: Prueba de cumplimiento de principios SOLID
-- **[Implementation Checklist](docs/IMPLEMENTATION-CHECKLIST.md)**: Verificación de requisitos implementados
 
 ## Próximos pasos
 
@@ -451,4 +370,4 @@ Este proyecto forma parte de un plan de onboarding. Para contribuir:
 
 1. Revisar la [documentación de arquitectura](docs/arquitecture.md)
 2. Consultar los [ADRs](docs/adrs/) para entender decisiones de diseño
-3. Seguir la [guía de onboarding](docs/onboarding.md) para configurar el entorno
+3. Seguir la [guía de ejecucion](docs/runbook.md) para configurar el entorno

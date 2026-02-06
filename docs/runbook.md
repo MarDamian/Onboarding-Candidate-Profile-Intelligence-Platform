@@ -25,7 +25,7 @@ cd Onboarding-Candidate-Profile-Intelligence-Platform
 ### 2. Configurar las variables de entorno:
 El proyecto utiliza variables de entorno para configuración de servicios y embeddings.
 ```bash
-cp infra/.env.example infra/.env
+cp .env.example .env
 ```
 Modifica el archivo `.env` si necesitas cambiar:
 - Credenciales de base de datos
@@ -35,9 +35,9 @@ Modifica el archivo `.env` si necesitas cambiar:
 ### 3. Levantar servicios con Docker
 Para iniciar todos los servicios del proyecto:
 ```bash
-cd ./infra/
+docker compose -f infra/docker-compose.yml --env-file .env build
 
-docker compose up
+docker compose -f infra/docker-compose.yml --env-file .env up 
 ```
 Esto levantará los siguientes servicios en segundo plano:
 - PostgreSQL (Base de datos relacional)
