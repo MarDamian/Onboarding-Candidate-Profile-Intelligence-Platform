@@ -30,11 +30,7 @@ export const ShowPage = () => {
     }, [id]);
 
     return (
-        <main
-            style={{
-                display: 'flex',
-                gap: '1rem',
-            }}>
+        <>
             {loading ? (
                 <div>Loading candidate profile...</div>
             ) : (
@@ -72,6 +68,6 @@ export const ShowPage = () => {
             )}
 
             <Insight candidateId={id} />
-        </main>
+        </>
     )
 }
