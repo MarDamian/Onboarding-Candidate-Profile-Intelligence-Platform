@@ -257,283 +257,71 @@ Reconstruye completamente la colección limpiando Qdrant y re-indexando todos lo
 
 ### Introducción
 
-Los endpoints de LLM proporcionan generación automática de insights sobre candidatos utilizando inteligencia artificial. Incluyen:
+El endpoint de LLM proporciona generación automática de insights sobre candidatos utilizando inteligencia artificial (Cohere + LangChain). Incluye:
 
-- **Resúmenes técnicos** - Análisis profundo del perfil
-- **Scoring de compatibilidad** - Evaluación contra vacantes
-- **Análisis comparativo** - Posicionamiento vs otros candidatos
+- **Resumen ejecutivo** del candidato
+- **Scoring** de 0 a 100
+- **Fortalezas y áreas de mejora**
+- **Rol sugerido**
 
 **URL Base para Insights:** `http://localhost:8000/v1/insights`
 
-### 1. Obtener Insights Generales de Candidato
+### 1. Generar Insights de Candidato
 
-Genera un resumen completo con análisis técnico, fortalezas, áreas de mejora y análisis comparativo.
+Genera un análisis completo del candidato usando un agente LLM que consulta su perfil y candidatos similares.
 
 - **URL:** `/insights/{candidate_id}`
 - **Método:** `GET`
 - **Parámetros de URL:**
   - `candidate_id`: ID del candidato (int, requerido)
-- **Parámetros de Query:**
-  - `include_comparison`: Incluir análisis comparativo (boolean, default: true)
 
 **Respuesta Exitosa:**
 ```json
 {
   "candidate_id": 1,
-  "insight_type": "summary",
-  "success": true,
-  "summary": {
-    "candidate_id": 1,
-    "candidate_name": "Juan Pérez",
-    "headline": "Senior Python Developer",
-    "technical_summary": "Juan es un desarrollador Python con 5 años de experiencia...",
-    "years_of_experience": 5.0,
-    "key_skills": [
-      {
-        "skill": "Python",
-        "proficiency_level": "Advanced",
-        "years_of_experience": 5.0,
-        "confidence_score": 0.95
-      }
-    ],
-    "comparison_metrics": {
-      "percentile_rank": 85.0,
-      "similar_candidates_count": 5,
-      "avg_experience_years": 4.2,
-      "skill_alignment": 0.75
-    },
-    "strengths": ["Technical skills well-developed", "Domain expertise demonstrated"],
-    "areas_for_improvement": ["Continuous learning opportunities"],
-    "recommendations": ["Invest in cloud technologies", "Develop leadership skills"],
-    "generated_at": "2026-02-04T10:30:00",
-    "model_version": "v1"
-  },
-  "score": null,
-  "error": null
+  "insights": {
+    "summary": "Candidato con fuerte perfil técnico en Python y FastAPI...",
+    "score": 85,
+    "strengths": ["Expertise en Python", "Experiencia en arquitecturas"],
+    "weaknesses": ["Falta experiencia en cloud"],
+    "suggested_role": "Senior Backend Developer"
+  }
 }
 ```
 
-**Códigos de Respuesta:**
-- `200 OK`: Insight generado exitosamente
-- `404 Not Found`: Candidato no existe
-- `500 Internal Server Error`: Error generando insight
-
----
-
-### 2. Generar Score de Compatibilidad
-
-Evalúa la compatibilidad técnica y cultural entre un candidato y una descripción de vacante.
-
-- **URL:** `/insights/score`
-- **Método:** `POST`
-- **Content-Type:** `application/json`
-
-**Request Body:**
+**Respuesta de Error (LLM falla):**
 ```json
 {
   "candidate_id": 1,
-  "job_description": "Buscamos Senior Python Developer con 5+ años de experiencia en Django/FastAPI...",
-  "required_skills": ["Python", "FastAPI", "PostgreSQL", "Docker"],
-  "nice_to_have_skills": ["Kubernetes", "Redis", "AWS"],
-  "weight_technical": 0.7,
-  "weight_cultural_fit": 0.3
-}
-```
-
-**Respuesta Exitosa:**
-```json
-{
-  "candidate_id": 1,
-  "insight_type": "score",
-  "success": true,
-  "summary": null,
-  "score": {
-    "overall_score": 0.85,
-    "technical_score": 0.90,
-    "cultural_fit_score": 0.75,
-    "justification": "Excelente alineación técnica. El candidato cubre todas las skills requeridas...",
-    "matching_skills": ["Python", "FastAPI", "PostgreSQL", "Docker"],
-    "missing_skills": ["Kubernetes"],
-    "growth_potential": "High"
-  },
-  "error": null
+  "insights": {
+    "summary": "Error: timeout exceeded.",
+    "score": 0,
+    "strengths": [],
+    "weaknesses": [],
+    "suggested_role": "N/A"
+  }
 }
 ```
 
 **Códigos de Respuesta:**
-- `200 OK`: Score calculado exitosamente
+- `200 OK`: Insight generado exitosamente (incluso si el LLM falla, retorna estructura con error)
 - `404 Not Found`: Candidato no existe
-- `422 Unprocessable Entity`: Validación fallida (job_description muy corta)
-- `500 Internal Server Error`: Error calculando score
 
-**Validaciones:**
-- `job_description`: Mínimo 10 caracteres
-- `candidate_id`: Mayor a 0
-- Pesos: entre 0.0 y 1.0
-
----
-
-### 3. Generar Resumen Detallado
-
-Genera un análisis profundo del candidato con evaluación de skills, potencial y recomendaciones.
-
-- **URL:** `/insights/summary`
-- **Método:** `POST`
-- **Content-Type:** `application/json`
-
-**Request Body:**
-```json
-{
-  "candidate_id": 1,
-  "include_comparison": true,
-  "include_skills_assessment": true,
-  "comparison_limit": 5
-}
-```
-
-**Respuesta Exitosa:**
-- Estructura idéntica al endpoint GET `/insights/{candidate_id}`
-- Incluye análisis más detallado de skills
-
-**Códigos de Respuesta:**
-- `200 OK`: Resumen generado
-- `404 Not Found`: Candidato no existe
-- `500 Internal Server Error`: Error generando resumen
-
----
-
-### 4. Obtener Análisis Comparativo
-
-Compara el candidato con otros perfiles similares en la base de datos.
-
-- **URL:** `/insights/{candidate_id}/comparison`
-- **Método:** `GET`
-- **Parámetros de URL:**
-  - `candidate_id`: ID del candidato (int, requerido)
-- **Parámetros de Query:**
-  - `limit`: Cantidad de similares (int, default: 5, rango: 1-20)
-  - `score_threshold`: Umbral mínimo de similitud (float, default: 0.3, rango: 0.0-1.0)
-
-**Respuesta Exitosa:**
-```json
-{
-  "reference_candidate_id": 1,
-  "reference_candidate_name": "Juan Pérez",
-  "comparison_metrics": {
-    "percentile_rank": 85.0,
-    "similar_candidates_count": 5,
-    "avg_experience_years": 4.2,
-    "skill_alignment": 0.75
-  },
-  "similar_profiles": [
-    {
-      "id": 2,
-      "name": "María García",
-      "score": 0.92
-    },
-    {
-      "id": 3,
-      "name": "Carlos López",
-      "score": 0.88
-    }
-  ],
-  "insights": "Juan se posiciona en el percentil 85, por encima del promedio...",
-  "generated_at": "2026-02-04T10:30:00"
-}
-```
-
-**Códigos de Respuesta:**
-- `200 OK`: Comparación generada
-- `404 Not Found`: Candidato no existe
-- `500 Internal Server Error`: Error generando comparación
-
----
-
-### 5. Health Check del Servicio de LLM
-
-Verifica la disponibilidad y configuración del servicio de LLM.
-
-- **URL:** `/insights/health`
-- **Método:** `GET`
-
-**Respuesta Exitosa:**
-```json
-{
-  "status": "healthy",
-  "service": "LLM Insights",
-  "version": "1.0.0"
-}
-```
-
-**Respuesta de Error:**
-```json
-{
-  "detail": "LLM service unavailable: COHERE_API_KEY not configured"
-}
-```
-
-**Códigos de Respuesta:**
-- `200 OK`: Servicio disponible
-- `503 Service Unavailable`: Servicio no configurado o no disponible
+> **Nota:** La latencia de este endpoint es de 2-10 segundos debido al procesamiento del agente LLM.
 
 ---
 
 ## Esquemas Principales
 
-### InsightResponse
+### InsightSchema
 
 ```typescript
 {
-  candidate_id: number;
-  insight_type: "summary" | "score" | "comparison";
-  summary?: CandidateSummary;
-  score?: ScoreResult;
-  error?: string;
-  success: boolean;
-}
-```
-
-### CandidateSummary
-
-```typescript
-{
-  candidate_id: number;
-  candidate_name: string;
-  headline: string;
-  technical_summary: string;
-  years_of_experience: number;
-  key_skills: SkillAssessment[];
-  comparison_metrics?: ComparisonMetrics;
+  summary: string;
+  score: number;       // 0-100
   strengths: string[];
-  areas_for_improvement: string[];
-  recommendations: string[];
-  generated_at: datetime;
-  model_version: string;
-}
-```
-
-### ScoreResult
-
-```typescript
-{
-  overall_score: number; // 0-1
-  technical_score: number; // 0-1
-  cultural_fit_score: number; // 0-1
-  justification: string;
-  matching_skills: string[];
-  missing_skills: string[];
-  growth_potential: "Low" | "Medium" | "High";
-}
-```
-
-### SkillAssessment
-
-```typescript
-{
-  skill: string;
-  proficiency_level: "Beginner" | "Intermediate" | "Advanced" | "Expert";
-  years_of_experience: number;
-  confidence_score: number; // 0-1
+  weaknesses: string[];
+  suggested_role: string;
 }
 ```
 
@@ -562,31 +350,30 @@ Todos los endpoints retornan errores estructurados:
 
 ## Ejemplos de Uso
 
-### Ejemplo 1: Obtener Insights Completos
+### Ejemplo 1: Obtener Insights de un Candidato
 
 ```bash
-curl -X GET "http://localhost:8000/v1/insights/1?include_comparison=true" \
+curl -X GET "http://localhost:8000/v1/insights/1" \
   -H "accept: application/json"
 ```
 
-### Ejemplo 2: Evaluar Candidato contra Vacante
+### Ejemplo 2: Búsqueda Semántica
 
 ```bash
-curl -X POST "http://localhost:8000/v1/insights/score" \
+curl -X POST "http://localhost:8000/v1/semantic_search/" \
   -H "Content-Type: application/json" \
   -d '{
-    "candidate_id": 1,
-    "job_description": "Buscamos Senior Python Developer con experiencia en FastAPI y PostgreSQL...",
-    "required_skills": ["Python", "FastAPI", "PostgreSQL"],
-    "weight_technical": 0.75,
-    "weight_cultural_fit": 0.25
+    "query": "desarrollador python con experiencia en machine learning",
+    "limit": 10,
+    "score_threshold": 0.2,
+    "skills_filter": ["Python", "TensorFlow"]
   }'
 ```
 
-### Ejemplo 3: Comparar con Candidatos Similares
+### Ejemplo 3: Buscar Candidatos Similares
 
 ```bash
-curl -X GET "http://localhost:8000/v1/insights/1/comparison?limit=10&score_threshold=0.5" \
+curl -X GET "http://localhost:8000/v1/semantic_search/similar/1?limit=5&score_threshold=0.5" \
   -H "accept: application/json"
 ```
 
