@@ -8,7 +8,7 @@ import os, redis, json
 load_dotenv()
 
 DB_URL = os.getenv("DATABASE_URL")
-QDRANT_HOST = os.getenv("QDRANT_HOST")
+QDRANT_URL = os.getenv("QDRANT_URL")
 REDIS_URL = os.getenv("REDIS_URL")
 
 r = redis.from_url(REDIS_URL)
@@ -33,7 +33,7 @@ def run_pipeline():
 
         extractor = Extractor(DB_URL)
         transformer = Transformer()
-        loader = Loader(QDRANT_HOST, DB_URL)
+        loader = Loader(QDRANT_URL, DB_URL)
 
         loader.ensure_collection()
 

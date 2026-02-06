@@ -11,8 +11,7 @@ from app.llm.compression import ContextCompressor
 from langchain_cohere import ChatCohere
 
 search_service = SearchService(
-    qdrant_host=os.getenv("QDRANT_HOST", "qdrant"), 
-    qdrant_port=6333
+    qdrant_url=os.getenv("QDRANT_URL"), 
 )
 
 SEARCH_API_URL = os.getenv("SEARCH_API_URL", "http://127.0.0.1:8000/v1")

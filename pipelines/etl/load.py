@@ -4,11 +4,11 @@ from sqlalchemy import create_engine, text
 import os
 
 class Loader:
-    def __init__(self, qdrant_host, db_url):
-        self.q_client =QdrantClient(host=qdrant_host, port=6333)
+    def __init__(self, qdrant_url, db_url):
+        self.q_client =QdrantClient(url=qdrant_url)
         self.engine = create_engine(db_url)
         self.collection_name = "candidates"
-        self.embedding_dimension = int(os.getenv("EMBEDDING_DIMENSION", "384"))
+        self.embedding_dimension = os.getenv("EMBEDDING_DIMENSION")
         self.embedding_distance = os.getenv("EMBEDDING_DISTANCE", "Cosine")
         
     def ensure_collection(self):

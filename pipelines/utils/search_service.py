@@ -7,14 +7,13 @@ from typing import Optional
 class SearchService:
     """Servicio para búsqueda semántica en Qdrant con filtros avanzados."""
     
-    def __init__(self, qdrant_host: str = "localhost", qdrant_port: int = 6333):
+    def __init__(self, qdrant_url: str ):
         """Inicializa el servicio de búsqueda.
         
         Args:
-            qdrant_host: Host del servidor Qdrant
-            qdrant_port: Puerto del servidor Qdrant
+            qdrant_url: Host del servidor Qdrant
         """
-        self.client = QdrantClient(host=qdrant_host, port=qdrant_port)
+        self.client = QdrantClient(url=qdrant_url)
         self.embeddings_service = EmbeddingsService()
         self.collection_name = "candidates"
     
