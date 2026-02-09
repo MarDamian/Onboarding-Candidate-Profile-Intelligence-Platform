@@ -185,8 +185,13 @@ Retorna de la request para la generación de Insights
 
 ### Endpoints de Administración ETL
 
-#### 1. Ejecutar Pipeline ETL (Asíncrono)
-Encola un job de ETL en Redis para procesamiento asíncrono por el Worker Rust. Los candidatos pendientes serán procesados de forma asíncrona.
+El sistema ETL ahora opera mediante un patrón **asíncrono**:
+- **Flask API** encola jobs en Redis
+- **Worker Rust** consume y procesa los jobs
+- Estado de jobs rastreado en Redis
+
+#### 1. Encolar Job ETL (Asíncrono)
+Encola un job de sincronización ETL en Redis. El Worker Rust lo procesará de forma asíncrona.
 
 - **URL:** `/admin/etl/sync`
 - **Método:** `POST`
@@ -196,17 +201,50 @@ Encola un job de ETL en Redis para procesamiento asíncrono por el Worker Rust. 
     ```json
     {
       "status": "queued",
-      "message": "ETL job queued successfully for async processing",
-      "job_type": "etl_sync",
-      "queue": "candidate_jobs"
+      "job_id": "etl_20260209_163045_a1b2c3d4",
+      "message": "ETL job enqueued for Rust worker"
     }
     ```
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error encolando job en Redis).
 
-**Nota:** Este endpoint encola el job y retorna inmediatamente. El procesamiento real lo realiza el Worker Rust consumiendo desde Redis.
+#### 2. Consultar Estado de Job Específico
+Obtiene el estado actual de un job ETL por su ID.
 
-#### 2. Ejecutar Pipeline ETL (Síncrono - Legacy)
+- **URL:** `/admin/etl/status/<job_id>`
+- **Método:** `GET`
+- **Parámetros de URL:** `job_id=[string]`
+- **Respuesta Exitosa (Job encontrado):**
+  - **Código:** `200 OK`
+  - **Contenido:**
+    ```json
+    {
+      "job_id": "etl_20260209_163045_a1b2c3d4",
+      "status": "completed",
+      "processed": "15",
+      "updated_at": "2026-02-09T16:31:02Z"
+    }
+    ```
+- **Respuesta (Job no encontrado):**
+  - **Código:** `404 Not Found`
+  - **Contenido:**
+    ```json
+    {
+      "job_id": "etl_20260209_163045_a1b2c3d4",
+      "status": "not_found"
+    }
+    ```
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error consultando Redis).
+
+**Estados posibles del job:**
+- `queued`: Job encolado, pendiente de procesamiento
+- `processing`: Job siendo procesado por el worker
+- `completed`: Job completado exitosamente
+- `failed`: Job falló durante el procesamiento
+- `not_found`: Job no existe en Redis
+
+#### 3. Ejecutar Pipeline ETL (Síncrono - Legacy)
 Procesa candidatos pendientes de indexación en Qdrant de forma síncrona. Endpoint legacy para compatibilidad.
 
 - **URL:** `/admin/etl/sync/direct`
@@ -218,17 +256,6 @@ Procesa candidatos pendientes de indexación en Qdrant de forma síncrona. Endpo
   - **Código:** `500 Internal Server Error` (Error durante ejecución del ETL).
 
 **Nota:** Este endpoint ejecuta el ETL de forma síncrona bloqueando la respuesta. Se recomienda usar `/admin/etl/sync` para ejecuciones asíncronas.
-
-#### 3. Consultar Status de Jobs ETL
-Obtiene el historial de ejecuciones del pipeline ETL.
-
-- **URL:** `/admin/etl/status`
-- **Método:** `GET`
-- **Respuesta Exitosa:**
-  - **Código:** `200 OK`
-  - **Contenido:** Lista de jobs con sus estados y resultados.
-- **Respuestas de Error:**
-  - **Código:** `500 Internal Server Error` (Error consultando historial).
 
 #### 4. Re-indexar Todos los Candidatos
 Fuerza la re-indexación completa de todos los candidatos en Qdrant.

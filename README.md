@@ -174,10 +174,23 @@ Durante este día se implementa:
   - Endpoint legacy `/v1/admin/etl/sync/direct` para ejecución síncrona
   - Payloads JSON compatibles con Worker Rust
 
+**Semana 3 - Día 15-16 Worker Rust - Implementación Completa**
+
+- **Worker Rust - Procesamiento Batch ETL y Embeddings**
+  - Integración con servicios externos:
+    - Cliente PostgreSQL con sqlx
+    - Cliente Cohere API para embeddings (`embed-multilingual-v3.0`)
+    - Cliente Qdrant para indexación vectorial
+  - Arquitectura de módulos completada:
+    - `jobs/etl.rs`: Lógica completa del pipeline ETL
+    - `jobs/processor.rs`: Integración con todos los servicios
+  - Soporte para embeddings configurables:
+    - Dimensión, modelo y distancia via variables de entorno
+  - Manejo robusto de errores y logging detallado
+
 **Pendiente:**
 
-- Procesamiento batch real (ETL y embeddings) en Worker Rust
-- Semana 3 — Microfrontend y Robustez
+- Semana 3 — Microfrontend
 
 ## Features (objetivo final)
 
@@ -200,12 +213,12 @@ Durante este día se implementa:
   - Gestión de procesos ETL con Redis como cola
   - Endpoints administrativos para operaciones batch
   - Gunicorn como servidor WSGI
-- **Rust Worker**: Procesador asíncrono de jobs
-  - Consumo de jobs desde Redis con BLPOP
-  - Arquitectura modular escalable
-  - Procesamiento de jobs ETL y embeddings (en desarrollo)
-  - Tokio para runtime asíncrono
-  - Logging con tracing
+- **Rust Worker**: Procesador asíncrono de jobs batch
+  - Consumo eficiente de jobs desde Redis con BLPOP bloqueante
+  - Arquitectura modular con separación de responsabilidades
+  - Tokio para runtime asíncrono de alto rendimiento
+  - Logging estructurado con tracing
+  - Escalabilidad horizontal con múltiples workers
 
 ### Data
 
@@ -227,13 +240,13 @@ Durante este día se implementa:
   - Almacenamiento y búsqueda de embeddings de 384 dimensiones
   - Soporte para filtros combinados (skills, nombre)
   - Persistencia de datos en volúmenes Docker
-- **Sentence Transformers**: Generación de embeddings
-  - Modelo: `all-MiniLM-L6-v2` (optimizado para CPU)
-  - Servicio centralizado de embeddings
+- **Cohere Embeddings**: Generación de vectores para búsqueda semántica
+  - Modelo: `embed-multilingual-v3.0` (1024 dimensiones)
+  - API cloud (sin procesamiento local)
+  - Integrado en Worker Rust para procesamiento batch
   - Configuración dinámica vía variables de entorno
 - **LLMs - Cohere**: Generación de insights avanzados
   - Modelo: `command-a-03-2025` para superior reasoning y tareas complejas
-  - Embeddings API: `embed-multilingual-light-v3.0` para búsqueda multilingüe
   - Arquitectura SOLID con 6 componentes especializados
   - Servicio de Insights con 3 tipos de análisis (summary, score, comparison)
   - Prompts versionados para A/B testing
@@ -290,8 +303,9 @@ Durante este día se implementa:
 
 ### Flask (Puerto 5000)
 
-- `POST /v1/admin/etl/sync` - Ejecutar pipeline ETL completo
-- `GET /v1/admin/etl/status` - Consultar estado de job ETL
+- `POST /v1/admin/etl/sync` - Encolar job ETL asíncrono (retorna job_id)
+- `GET /v1/admin/etl/status/<job_id>` - Consultar estado de job ETL
+- `POST /v1/admin/etl/sync/direct` - Ejecutar ETL síncrono (legacy)
 - `POST /v1/admin/qdrant/reindex` - Re-indexar todos los candidatos
 - `GET /v1/admin/qdrant/stats` - Estadísticas de Qdrant
 
@@ -334,6 +348,11 @@ services/
 │   │   └── __init__.py
 │   ├── requirements.txt
 │   └── run.py
+│
+├── worker-rust/                   # Worker batch asíncrono
+│   ├── src/
+│   │   └── jobs/                  # Procesadores de jobs
+│   └── Cargo.toml
 
 ui/
 └── react-app/                     # Interfaz de usuario
@@ -356,10 +375,11 @@ prompts/
 
 ## Documentación adicional
 
-- **[Ejecucion Inicial](docs/runbook.mdmd)**: Guía paso a paso para nuevos desarrolladores
+- **[Ejecucion Inicial](docs/runbook.md)**: Guía paso a paso para nuevos desarrolladores
 - **[Arquitectura](docs/arquitecture.md)**: Decisiones de diseño y patrones utilizados
 - **[API Reference](docs/api.md)**: Documentación completa de endpoints
 - **[ADRs](docs/adrs/)**: Decisiones arquitectónicas registradas
+  - **ADR 006**: Worker Batch en Rust para Procesamiento Asíncrono
   - **ADR 005**: Integración de LLM Cohere y Embeddings API
   - **ADR 004**: Vector Search con Qdrant
   - **ADR 003**: Refactor de búsqueda semántica

@@ -125,7 +125,7 @@ services:
     env_file:
       - ../.env
       
-  worker_rust:
+worker_rust:
     build:
       context: ..
       dockerfile: infra/Dockerfile.worker-rust
@@ -137,11 +137,11 @@ services:
         condition: service_healthy
       qdrant:
         condition: service_healthy
-    environment:
+    environment:  
       - REDIS_URL=redis://redis:6379
       - REDIS_QUEUE=jobs:etl
-      - DATABASE_URL=${DATABASE_URL}
-      - QDRANT_URL=${QDRANT_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
+      - QDRANT_URL=http://qdrant:6334/
       - COHERE_API_KEY=${COHERE_API_KEY}
       - EMBEDDING_MODEL=${EMBEDDING_MODEL}
       - EMBEDDING_DIMENSION=${EMBEDDING_DIMENSION}
