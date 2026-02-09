@@ -10,8 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroui/breadcrumbs": "^2.2.24",
+    "@heroui/react": "^2.8.8",
+    "@heroui/table": "^2.2.30",
+    "@heroui/tooltip": "^2.2.27",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.4",
+    "framer-motion": "^12.33.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.71.1",
