@@ -50,11 +50,12 @@ docker compose -f infra/docker-compose.yml --env-file .env up -d
 
 Esto levantará los siguientes servicios en segundo plano:
 - PostgreSQL (Base de datos relacional)
-- Redis (Cache y tracking de jobs ETL)
+- Redis (Cache, tracking de jobs ETL y cola de procesamiento asíncrono)
 - Qdrant (Motor de búsqueda vectorial)
 - FastAPI (API pública - CRUD y búsqueda semántica)
 - Flask (API administrativa - ETL y gestión Qdrant)
 - React (Interfaz de usuario)
+- Worker Rust (Procesador asíncrono de jobs desde Redis)
 
 **Configuración automática:**
 Al iniciar, FastAPI ejecuta automáticamente:
@@ -82,6 +83,27 @@ docker compose ps
 ```
 Todos deben estar en estado `running`.
 
+**Verificar Worker Rust:**
+Para confirmar que el Worker Rust está consumiendo jobs desde Redis correctamente:
+```bash
+docker compose -f infra/docker-compose.yml logs worker_rust
+```
+Deberías ver logs indicando que el worker está conectado a Redis y esperando jobs:
+```
+INFO worker_rust: Starting Worker Rust...
+INFO worker_rust: Redis connected successfully at redis://redis:6379
+INFO worker_rust: Waiting for jobs from queue: candidate_jobs
+```
+
+Para probar el flujo completo de procesamiento asíncrono:
+```bash
+# 1. Encolar un job ETL desde Flask
+curl -X POST http://localhost:5000/v1/admin/etl/sync
+
+# 2. Verificar los logs del Worker Rust
+docker compose -f infra/docker-compose.yml logs worker_rust --tail 20
+```
+
 ## Flujo de PR (IMPORTANTE)
 
 ### Flujo de trabajo
@@ -104,3 +126,5 @@ git checkout -b feature/{feature-name}
 - Las migraciones y seeds se ejecutan automáticamente en `docker compose up`
 - Para re-indexar Qdrant manualmente: `POST http://localhost:5000/v1/admin/qdrant/reindex`
 - Configuración de embeddings se gestiona en `.env`
+- Los jobs ETL se procesan de forma asíncrona: Flask encola → Redis → Worker Rust procesa
+- Para ejecución síncrona legacy usa: `POST http://localhost:5000/v1/admin/etl/sync/direct`

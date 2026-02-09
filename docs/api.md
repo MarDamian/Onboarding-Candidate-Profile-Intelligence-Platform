@@ -185,10 +185,31 @@ Retorna de la request para la generación de Insights
 
 ### Endpoints de Administración ETL
 
-#### 1. Ejecutar Pipeline ETL
-Procesa candidatos pendientes de indexación en Qdrant.
+#### 1. Ejecutar Pipeline ETL (Asíncrono)
+Encola un job de ETL en Redis para procesamiento asíncrono por el Worker Rust. Los candidatos pendientes serán procesados de forma asíncrona.
 
 - **URL:** `/admin/etl/sync`
+- **Método:** `POST`
+- **Respuesta Exitosa:**
+  - **Código:** `202 Accepted`
+  - **Contenido:** 
+    ```json
+    {
+      "status": "queued",
+      "message": "ETL job queued successfully for async processing",
+      "job_type": "etl_sync",
+      "queue": "candidate_jobs"
+    }
+    ```
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error encolando job en Redis).
+
+**Nota:** Este endpoint encola el job y retorna inmediatamente. El procesamiento real lo realiza el Worker Rust consumiendo desde Redis.
+
+#### 2. Ejecutar Pipeline ETL (Síncrono - Legacy)
+Procesa candidatos pendientes de indexación en Qdrant de forma síncrona. Endpoint legacy para compatibilidad.
+
+- **URL:** `/admin/etl/sync/direct`
 - **Método:** `POST`
 - **Respuesta Exitosa:**
   - **Código:** `200 OK`
@@ -196,7 +217,9 @@ Procesa candidatos pendientes de indexación en Qdrant.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error durante ejecución del ETL).
 
-#### 2. Consultar Status de Jobs ETL
+**Nota:** Este endpoint ejecuta el ETL de forma síncrona bloqueando la respuesta. Se recomienda usar `/admin/etl/sync` para ejecuciones asíncronas.
+
+#### 3. Consultar Status de Jobs ETL
 Obtiene el historial de ejecuciones del pipeline ETL.
 
 - **URL:** `/admin/etl/status`
@@ -207,7 +230,7 @@ Obtiene el historial de ejecuciones del pipeline ETL.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error consultando historial).
 
-#### 3. Re-indexar Todos los Candidatos
+#### 4. Re-indexar Todos los Candidatos
 Fuerza la re-indexación completa de todos los candidatos en Qdrant.
 
 - **URL:** `/admin/qdrant/reindex`
@@ -218,7 +241,7 @@ Fuerza la re-indexación completa de todos los candidatos en Qdrant.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error durante la re-indexación).
 
-#### 4. Obtener Estadísticas de Qdrant
+#### 5. Obtener Estadísticas de Qdrant
 Obtiene información y métricas de la colección de candidatos.
 
 - **URL:** `/admin/qdrant/stats`
@@ -229,7 +252,7 @@ Obtiene información y métricas de la colección de candidatos.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error obteniendo estadísticas).
 
-#### 5. Limpiar Colección de Qdrant
+#### 6. Limpiar Colección de Qdrant
 Elimina todos los puntos de la colección de candidatos en Qdrant.
 
 - **URL:** `/admin/qdrant/clear`
@@ -240,7 +263,7 @@ Elimina todos los puntos de la colección de candidatos en Qdrant.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error limpiando colección).
 
-#### 6. Reconstruir Colección desde Cero
+#### 7. Reconstruir Colección desde Cero
 Reconstruye completamente la colección limpiando Qdrant y re-indexando todos los candidatos.
 
 - **URL:** `/admin/qdrant/rebuild`
