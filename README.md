@@ -155,8 +155,28 @@ Durante este día se implementa:
 - **UI/UX Mejorada**
   - navbar mejorado y estilizado, se agrego buscador para la lista
 
+**Semana 3 - Día 13-14 Worker Rust**
+
+- **Worker Rust - Procesamiento Asíncrono de Jobs**
+  - Arquitectura modular con separación de responsabilidades
+  - Consumo de jobs desde Redis con `BLPOP` bloqueante
+  - Módulos especializados:
+    - `config.rs`: Gestión de configuración desde variables de entorno
+    - `queue.rs`: Abstracción de operaciones con Redis
+    - `jobs/types.rs`: Definición de tipos de jobs y payloads
+    - `jobs/processor.rs`: Procesador principal con lógica por tipo de job
+  - Integración con Flask API para encolado asíncrono
+  - Logging detallado con tracing
+  - Manejo robusto de errores
+- **Flask API - Encolado Asíncrono**
+  - Refactor de `ETLManager` para enviar jobs a Redis
+  - Nuevo endpoint `/v1/admin/etl/sync` retorna 202 Accepted
+  - Endpoint legacy `/v1/admin/etl/sync/direct` para ejecución síncrona
+  - Payloads JSON compatibles con Worker Rust
+
 **Pendiente:**
 
+- Procesamiento batch real (ETL y embeddings) en Worker Rust
 - Semana 3 — Microfrontend y Robustez
 
 ## Features (objetivo final)
@@ -180,6 +200,12 @@ Durante este día se implementa:
   - Gestión de procesos ETL con Redis como cola
   - Endpoints administrativos para operaciones batch
   - Gunicorn como servidor WSGI
+- **Rust Worker**: Procesador asíncrono de jobs
+  - Consumo de jobs desde Redis con BLPOP
+  - Arquitectura modular escalable
+  - Procesamiento de jobs ETL y embeddings (en desarrollo)
+  - Tokio para runtime asíncrono
+  - Logging con tracing
 
 ### Data
 
@@ -234,14 +260,15 @@ Durante este día se implementa:
 
 ## Servicios y puertos
 
-| Servicio   | Puerto | Descripción                                   |
-| ---------- | ------ | --------------------------------------------- |
-| FastAPI    | 8000   | API REST para CRUD de candidatos              |
-| Flask      | 5000   | API administrativa (ETL + búsqueda semántica) |
-| React      | 5173   | Interfaz de usuario web                       |
-| PostgreSQL | 5433   | Base de datos relacional                      |
-| Redis      | 6379   | Cache y cola de jobs                          |
-| Qdrant     | 6333   | Motor de búsqueda vectorial                   |
+| Servicio    | Puerto | Descripción                                   |
+| ----------- | ------ | --------------------------------------------- |
+| FastAPI     | 8000   | API REST para CRUD de candidatos              |
+| Flask       | 5000   | API administrativa (ETL + búsqueda semántica) |
+| React       | 5173   | Interfaz de usuario web                       |
+| Worker Rust | -      | Procesamiento asíncrono de jobs desde Redis   |
+| PostgreSQL  | 5433   | Base de datos relacional                      |
+| Redis       | 6379   | Cache y cola de jobs                          |
+| Qdrant      | 6333   | Motor de búsqueda vectorial                   |
 
 ## Endpoints principales
 
