@@ -42,17 +42,18 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
   - Envío de jobs a Redis para procesamiento asíncrono
 
 - **Worker Rust**
-  - Procesador asíncrono de jobs desde Redis
-  - Arquitectura modular con separación de responsabilidades:
-    - `config`: Gestión de configuración
-    - `queue`: Conexión y operaciones con Redis
-    - `jobs`: Procesamiento especializado por tipo de job
-  - Consumo de jobs con `BLPOP` (bloqueante)
-  - Soporte para múltiples tipos de jobs:
-    - `etl_sync`: Procesamiento batch de ETL (pendiente)
-    - `embedding_batch`: Generación de embeddings (pendiente)
-  - Logging detallado con tracing
-  - Runtime asíncrono con Tokio
+  - Procesador asíncrono de jobs desde Redis (`jobs:etl`)
+  - **Consumo eficiente** de jobs con `BLPOP` (bloqueante, sin polling)
+  - **Tipos de jobs soportados**:
+    - `etl_sync`: Procesamiento batch de ETL completo
+    - `embedding_batch`: Generación de embeddings por lotes específicos
+  - **Integración con servicios externos**:
+    - PostgreSQL (sqlx) para extracción y actualización de candidatos
+    - Cohere API para generación de embeddings
+    - Qdrant para indexación vectorial
+  - **Logging detallado** con tracing para observabilidad
+  - **Runtime asíncrono** con Tokio para alto rendimiento
+  - **Escalabilidad horizontal**: Múltiples workers pueden consumir de la misma cola
 
 
 ### Pipelines - Procesamiento de Datos
@@ -94,7 +95,7 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
   - Cache y soporte para procesamiento asíncrono
   - Cola de jobs (`jobs:etl`) para Worker Rust
   - Tracking de estado de jobs ETL
-  - Tracking de jobs ETL
+  - Storage de estado con hashes (`job:{id}`)
 
 ### Persistencia y Migraciones
 
