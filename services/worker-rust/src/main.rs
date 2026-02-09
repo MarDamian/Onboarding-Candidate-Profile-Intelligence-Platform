@@ -1,59 +1,51 @@
-use anyhow::{Context, Result};
-use redis::AsyncCommands;
-use serde::{Deserialize, Serialize};
-use tracing::{error, info};
+mod config;
+mod jobs;
+mod queue;
 
-#[derive(Debug, Serialize, Deserialize)]
-struct JobPayload {
-    job_type: String,
-    requested_by: Option<String>,
-    timestamp: Option<String>,
-}
+use anyhow::Result;
+use config::Config;
+use jobs::JobProcessor;
+use queue::RedisQueue;
+use tracing::{error, info};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Initialize environment and logging
     dotenvy::dotenv().ok();
-
     tracing_subscriber::fmt()
         .with_env_filter("info")
         .init();
 
-    let redis_url =
-        std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://redis:6379".to_string());
-
-    let queue_name = std::env::var("REDIS_QUEUE").unwrap_or_else(|_| "jobs:etl".to_string());
-
+    // Load configuration
+    let config = Config::from_env();
+    
     info!("Rust Worker starting...");
-    info!("Redis URL: {}", redis_url);
-    info!("Queue: {}", queue_name);
+    info!("Redis URL: {}", config.redis_url);
+    info!("Queue: {}", config.queue_name);
 
-    let client = redis::Client::open(redis_url).context("Failed to create Redis client")?;
-    let mut conn = client
-        .get_multiplexed_async_connection()
-        .await
-        .context("Failed to connect to Redis")?;
+    // Initialize Redis queue and processor
+    let redis_queue = RedisQueue::new(&config.redis_url)?;
+    let mut conn = redis_queue.connect().await?;
+    let processor = JobProcessor::new();
 
+    info!("Worker ready. Listening for jobs...");
+
+    // Main event loop
     loop {
-        // BLPOP blocks until there is an item
-        let result: Option<(String, String)> = conn
-            .blpop(&queue_name, 0.0)
-            .await
-            .context("Redis BLPOP failed")?;
-
-        if let Some((_queue, raw_payload)) = result {
-            info!("Job received: {}", raw_payload);
-
-            let parsed: Result<JobPayload> = serde_json::from_str(&raw_payload)
-                .context("Failed to parse job JSON payload");
-
-            match parsed {
-                Ok(job) => {
-                    info!("Job type: {}", job.job_type);
-                    info!("Job processing not yet implemented");
+        match RedisQueue::pop_job(&mut conn, &config.queue_name).await {
+            Ok(Some(payload)) => {
+                if let Err(e) = processor.process(&payload).await {
+                    error!("Failed to process job: {:?}", e);
                 }
-                Err(e) => {
-                    error!("Invalid job payload: {:?}", e);
-                }
+            }
+            Ok(None) => {
+                // No job available (shouldn't happen with blocking pop)
+                continue;
+            }
+            Err(e) => {
+                error!("Error popping job from queue: {:?}", e);
+                // Add a small delay before retrying to avoid busy loop
+                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
             }
         }
     }

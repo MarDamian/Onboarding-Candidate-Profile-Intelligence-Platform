@@ -35,10 +35,24 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 
 - **Flask (Administración)**
   - API administrativa
-  - Orquestación de procesos ETL
+  - Orquestación de procesos ETL (encolado asíncrono)
   - Gestión de colección Qdrant (reindex, stats, clear, rebuild)
   - Endpoints admin bajo `/v1/admin/etl` y `/v1/admin/qdrant`
   - No expuesta directamente al usuario final
+  - Envío de jobs a Redis para procesamiento asíncrono
+
+- **Worker Rust**
+  - Procesador asíncrono de jobs desde Redis
+  - Arquitectura modular con separación de responsabilidades:
+    - `config`: Gestión de configuración
+    - `queue`: Conexión y operaciones con Redis
+    - `jobs`: Procesamiento especializado por tipo de job
+  - Consumo de jobs con `BLPOP` (bloqueante)
+  - Soporte para múltiples tipos de jobs:
+    - `etl_sync`: Procesamiento batch de ETL (pendiente)
+    - `embedding_batch`: Generación de embeddings (pendiente)
+  - Logging detallado con tracing
+  - Runtime asíncrono con Tokio
 
 
 ### Pipelines - Procesamiento de Datos
@@ -78,6 +92,8 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 
 - **Redis**
   - Cache y soporte para procesamiento asíncrono
+  - Cola de jobs (`jobs:etl`) para Worker Rust
+  - Tracking de estado de jobs ETL
   - Tracking de jobs ETL
 
 ### Persistencia y Migraciones
