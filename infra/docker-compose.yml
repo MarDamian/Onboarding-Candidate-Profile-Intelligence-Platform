@@ -125,7 +125,35 @@ services:
     env_file:
       - ../.env
       
+  worker_rust:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.worker-rust
+    container_name: worker_rust
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres_db:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - REDIS_QUEUE=jobs:etl
+      - DATABASE_URL=${DATABASE_URL}
+      - QDRANT_URL=${QDRANT_URL}
+      - COHERE_API_KEY=${COHERE_API_KEY}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+      - EMBEDDING_DIMENSION=${EMBEDDING_DIMENSION}
+      - EMBEDDING_DISTANCE=${EMBEDDING_DISTANCE}
+    volumes:
+      - ./:/app
+    restart: always 
+    env_file:
+      - ../.env
+
 volumes:
   postgres_data:
   qdrant_data:
   redis_data:
+  worker_rust_data:
