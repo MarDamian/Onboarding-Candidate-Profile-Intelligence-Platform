@@ -1,0 +1,11 @@
+FROM rust:1.84-slim AS builder
+WORKDIR /app
+
+COPY . .
+
+WORKDIR /app/services/worker-rust
+RUN cargo build --release
+
+FROM python:3.11-slim
+COPY --from=builder /app/services/worker-rust/target/release/worker-rust /usr/local/bin/worker-rust
+CMD ["worker-rust"]
