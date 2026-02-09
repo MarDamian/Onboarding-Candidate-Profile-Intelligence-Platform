@@ -12,3 +12,6 @@ anyhow = "1.0"
 dotenvy = "0.15"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tokio-postgres = "0.7"
+reqwest = { version = "0.11", features = ["json"] }
+qdrant-client = "=1.10.1"
