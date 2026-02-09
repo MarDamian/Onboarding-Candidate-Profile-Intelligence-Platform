@@ -40,7 +40,7 @@ docker compose -f infra/docker-compose.yml --env-file .env build
 docker compose -f infra/docker-compose.yml --env-file .env up 
 ```
 
-**Nota:** Si tienes problemas dedependencias en `package.json` (u otro servicio), usá el flag `-V` para recrear los volúmenes anónimos y evitar que Docker reutilice un `node_modules` desactualizado:
+**Nota:** Si tienes problemas de dependencias en `package.json` (u otro servicio), usá el flag `-V` para recrear los volúmenes anónimos y evitar que Docker reutilice un `node_modules` desactualizado:
 
 ```bash
 docker compose -f infra/docker-compose.yml up  -V --build 
