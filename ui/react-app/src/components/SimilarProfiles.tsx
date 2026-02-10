@@ -1,20 +1,18 @@
 type Props = {
   candidateId: number;
-  height?: number;
 };
 
-export default function SvelteMicrofrontend({ candidateId, height = 520 }: Props) {
+export const SimilarProfiles = ({ candidateId }: Props) => {
   const url = `http://localhost:5174/?candidateId=${candidateId}`;
 
   return (
-    <div style={{ width: "100%", height }}>
+    <div className="w-full h-[calc(100vh-100px)]">
       <iframe
         src={url}
+        scrolling="no"
         style={{
           width: "100%",
           height: "100%",
-          border: "none",
-          borderRadius: "12px",
         }}
         title="Svelte Microfrontend"
       />

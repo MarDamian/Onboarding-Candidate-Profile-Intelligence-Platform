@@ -18,7 +18,7 @@ function App() {
         <AppSidebar />
         <div className='flex flex-col w-full'>
           <AppNavbar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
-          <main className='overflow-auto p-4 md:p-6 lg:pt-6 pt-16'>
+          <main className='overflow-hidden p-4 md:p-6 lg:pt-6 pt-16'>
             <Routes>
               <Route path="/" element={<HomePage searchTerm={searchTerm} />} />
               <Route path="/create" element={<CreatePage />} />
