@@ -18,11 +18,15 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 - **React App**
   - Interfaz principal construida con React y TypeScript.
   - **Gestión de Formularios**: Implementación de `react-hook-form` para validaciones eficientes y manejo de estado.
-  - **Diseño y Estilo**: Sistema de estilos moderno con CSS optimizado, incluyendo tablas con zebra-striping, efectos de hover y diseño responsivo.
+  - **Diseño y Estilo**: Sistema de estilos moderno con tailwind y heroui, efectos de hover y diseño responsivo.
   - **Arquitectura de Red**: Capa de servicios centralizada (`CandidateService.ts`) con gestión de errores y estados de carga (`loading`) descentralizados directamente en los componentes de página para mayor precisión visual.
   - Consume la API pública expuesta por FastAPI.
 
-> En fases posteriores se integrará un microfrontend en Svelte para vistas especializadas.
+- **Svelte Microfrontend**
+  - Microfrontend construido con Svelte y TypeScript.
+  - **Diseño y Estilo**: Sistema de estilos moderno con CSS.
+  - **Arquitectura de Red**: Capa de servicios centralizada con gestión de errores y estados de carga descentralizados directamente en los componentes de página para mayor precisión visual.
+  - Consume la API pública de Flask.
 
 
 ### Servicios - Backend
@@ -122,7 +126,10 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 - **Redis**: `redis:8.4.0-alpine`
 - **Qdrant**: `qdrant/qdrant:v1.16.2`
 - **Python**: `python:3.12-slim` (FastAPI y Flask)
+- **Node**: `node:22-alpine` (React y Svelte)
 
 ### Startup Automático
 - **FastAPI**: Ejecuta migraciones → seed → servidor
 - **Flask**: Workers con timeout extendido para procesos ETL de larga duración
+- **React**: Ejecuta servidor de desarrollo
+- **Svelte**: Ejecuta servidor de desarrollo
