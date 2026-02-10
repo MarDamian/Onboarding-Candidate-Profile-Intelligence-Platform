@@ -188,9 +188,24 @@ Durante este día se implementa:
     - Dimensión, modelo y distancia via variables de entorno
   - Manejo robusto de errores y logging detallado
 
+**Semana 3 - Día 17 - Microfrontend Svelte**
+
+-   **Microfrontend de Candidatos Similares**
+    -   Implementación en Svelte (`ui/svelte-mf`) usando Vite
+    -   Componente `SimilarCandidates.svelte` para visualizar perfiles relacionados
+    -   Comunicación con API Backend (`/v1/semantic_search/similar/{id}`)
+    -   Modo "Embebido" para integración limpia sin headers/controls
+-   **Integración en React**
+    -   Uso de **Iframe** para aislar el microfrontend
+    -   Comunicación unidireccional vía URL parameters (`?candidateId=...`)
+    -   Componente wrapper `SimilarProfiles.tsx` en React
+    -   Despliegue integrado en la vista de detalle de candidato
+
 **Pendiente:**
 
-- Semana 3 — Microfrontend
+Semana 3:
+- Día 16 - Pruebas automatizadas y CI - Logs estructurados - Timeouts y reintentos
+- Día 17 - Documentación final - Demo completa
 
 ## Features (objetivo final)
 
@@ -260,7 +275,10 @@ Durante este día se implementa:
   - Componentes para CRUD completo
   - Componentes de Insights (ScoringCard, ComparisonChart, SkillsAssessment)
   - Hooks personalizados (useInsights, useScoring, useComparison)
-- **Svelte**: Microfrontend especializado integrado en React (pendiente)
+- **Svelte**: Microfrontend especializado integrado en React
+  - Vista de "Candidatos Similares"
+  - Arquitectura basada en componentes ligeros
+  - Integración vía Iframe con paso de parámetros por URL
 
 ### Infraestructura
 
@@ -278,6 +296,7 @@ Durante este día se implementa:
 | FastAPI     | 8000   | API REST para CRUD de candidatos              |
 | Flask       | 5000   | API administrativa (ETL + búsqueda semántica) |
 | React       | 5173   | Interfaz de usuario web                       |
+| Svelte      | 5174   | Microfrontend de candidatos similares         |
 | Worker Rust | -      | Procesamiento asíncrono de jobs desde Redis   |
 | PostgreSQL  | 5433   | Base de datos relacional                      |
 | Redis       | 6379   | Cache y cola de jobs                          |
@@ -356,11 +375,18 @@ services/
 
 ui/
 └── react-app/                     # Interfaz de usuario
+│    ├── src/
+│    │   ├── components/            # Componentes reutilizables
+│    │   ├── pages/                 # Páginas de la aplicación
+│    │   ├── services/              # Cliente API
+│    │   └── types/                 # Tipos TypeScript
+│    ├── package.json
+│    └── vite.config.ts
+│
+└── svelte-mf/                     # Microfrontend en Svelte
     ├── src/
-    │   ├── components/            # Componentes reutilizables
-    │   ├── pages/                 # Páginas de la aplicación
-    │   ├── services/              # Cliente API
-    │   └── types/                 # Tipos TypeScript
+    │   ├── assets/
+    │   ├── lib/
     ├── package.json
     └── vite.config.ts
 

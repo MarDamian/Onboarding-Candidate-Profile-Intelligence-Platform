@@ -1,14 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer,
-    CartesianGrid,
-} from "recharts";
-import {
     Spinner,
     Divider,
     Chip,
@@ -73,11 +64,6 @@ export const Insight = ({ candidateId }: Props) => {
         );
     }
 
-    const chartData = data.strengths.map((s, i) => ({
-        name: s.length > 20 ? `${s.substring(0, 17)}...` : s,
-        value: 100 - i * 8,
-    }));
-
     return (
         <div className="space-y-8 rounded-xl border border-divider bg-content1 p-3 shadow-sm">
             <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -110,25 +96,7 @@ export const Insight = ({ candidateId }: Props) => {
                 </blockquote>
             </section>
 
-            <section>
-                <h4 className="mb-4 text-lg font-semibold text-foreground">Fortalezas destacadas</h4>
-                <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 60 }}>
-                            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
-                            <XAxis dataKey="name" angle={-45} textAnchor="end" height={70} interval={0} />
-                            <YAxis domain={[0, 100]} />
-                            <Tooltip
-                                contentStyle={{ backgroundColor: "hsl(var(--background))", borderColor: "hsl(var(--divider))" }}
-                            />
-                            <Bar dataKey="value" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </section>
-
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Fortalezas */}
                 <div className="space-y-3">
                     <h4 className="text-lg font-semibold text-success">Fortalezas</h4>
                     <div className="flex flex-wrap gap-2">
@@ -150,7 +118,6 @@ export const Insight = ({ candidateId }: Props) => {
                     </div>
                 </div>
 
-                {/* Áreas de mejora */}
                 <div className="space-y-3">
                     <h4 className="text-lg font-semibold text-warning">Áreas de mejora</h4>
                     <div className="flex flex-wrap gap-2">

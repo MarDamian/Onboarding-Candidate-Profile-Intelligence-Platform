@@ -9,7 +9,7 @@ import {
 import CandidateService from "../services/CandidateService";
 import type { Candidate } from "../types/candidate";
 import { Insight } from "../components/Insight";
-import SvelteMicrofrontend from "../components/SimilarProfiles";
+import { SimilarProfiles } from "../components/SimilarProfiles";
 
 export const ShowPage = () => {
     const { id } = useParams<{ id: string }>();
@@ -62,7 +62,7 @@ export const ShowPage = () => {
         : [];
 
     return (
-        <>
+        <div className="w-full min-h-full">
             <div className="flex flex-col md:flex-row gap-3 mx-auto w-full">
                 <div className="w-full md:w-[40%]">
                     <div className="mb-8 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
@@ -119,11 +119,9 @@ export const ShowPage = () => {
                 </div>
 
             </div>
-            <div>
-                <SvelteMicrofrontend candidateId={id}></SvelteMicrofrontend>
-            </div>
 
-        </>
+            <SimilarProfiles candidateId={id} />
+        </div>
 
     );
 };

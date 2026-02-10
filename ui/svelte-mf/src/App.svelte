@@ -1,47 +1,101 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import SimilarCandidates from './lib/SimilarCandidates.svelte';
+  import { onMount } from 'svelte';
+  
+  let candidateId: number | null = null;
+  let isEmbedded = false;
+
+  onMount(() => {
+    const params = new URLSearchParams(window.location.search);
+    const idParam = params.get('candidateId');
+    if (idParam) {
+      candidateId = parseInt(idParam, 10);
+      isEmbedded = true;
+    } else {
+      candidateId = 1;
+    }
+  });
 </script>
 
-<main>
-  <div>
-    <a href="https://vite.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
+<main class:embedded={isEmbedded}>
+  {#if !isEmbedded}
+    <div class="header">
+      <h1>Candidate Intelligence Platform</h1>
+      <p class="subtitle">Similar Profile Search</p>
+    </div>
+    
+    <div class="controls">
+      <label for="candidate-id">Select Candidate ID:</label>
+      <input id="candidate-id" type="number" bind:value={candidateId} min="1" />
+    </div>
+  {/if}
 
-  <div class="card">
-    <Counter />
-  </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more lolaso
-  </p>
+  {#if candidateId}
+    <SimilarCandidates {candidateId} />
+  {/if}
 </main>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
+  :global(:root) {
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
   }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
+
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
   }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
+
+  main.embedded {
+    padding: 0;
+    margin: 0;
+    max-width: none; 
+    text-align: left;
   }
-  .read-the-docs {
-    color: #888;
+
+  .header {
+    margin-bottom: 2rem;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, #2563eb, #9333ea);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    font-size: 1.25rem;
+    color: #6b7280;
+    margin-top: 0;
+  }
+
+  .controls {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #f3f4f6;
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+
+  label {
+    font-weight: 600;
+    color: #374151;
+  }
+
+  input {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    width: 80px;
   }
 </style>

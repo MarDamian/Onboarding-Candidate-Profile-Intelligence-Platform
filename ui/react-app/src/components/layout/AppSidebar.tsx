@@ -48,7 +48,7 @@ export const AppSidebar = ({ className }: AppSidebarProps) => {
         const collapsed = !isMobile && isCollapsed;
 
         return (
-            <div className="flex h-full flex-col">
+            <div className=" flex h-full flex-col">
                 <div className={cn(
                     "flex items-center gap-3 px-4 py-5 transition-all duration-300",
                     collapsed && "justify-center px-2"
