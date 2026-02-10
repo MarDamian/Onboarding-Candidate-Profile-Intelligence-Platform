@@ -124,8 +124,8 @@ services:
       - VITE_API_URL=${VITE_API_URL}
     env_file:
       - ../.env
-      
-worker_rust:
+
+  worker_rust:
     build:
       context: ..
       dockerfile: infra/Dockerfile.worker-rust
@@ -151,9 +151,23 @@ worker_rust:
     restart: always 
     env_file:
       - ../.env
+  
+  svelte-mf:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.svelte
+    container_name: svelte_mf
+    restart: always
+    ports:
+      - "5174:5174"
+    volumes:
+      - ../ui/svelte-mf:/app
+      - /app/node_modules
+
 
 volumes:
   postgres_data:
   qdrant_data:
   redis_data:
   worker_rust_data:
+  evelte_mf_data:
