@@ -14,9 +14,9 @@ name: CI - Tests & Lint
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, features, feature/*]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, features]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
