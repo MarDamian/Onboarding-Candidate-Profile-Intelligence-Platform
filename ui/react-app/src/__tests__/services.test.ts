@@ -15,13 +15,28 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios from 'axios';
 import CandidateService from '../services/CandidateService';
 import InsightsService from '../services/InsightsService';
 
-// Mock de axios
-vi.mock('axios');
-const mockedAxios = vi.mocked(axios, true);
+// Mock de apiClient — el módulo real hace axios.create() + interceptors,
+// lo cual falla en test si no existe una instancia real de axios.
+// Mockeamos el módulo completo para aislar los servicios del transporte HTTP.
+vi.mock('../services/apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    interceptors: {
+      response: { use: vi.fn() },
+      request: { use: vi.fn() },
+    },
+  },
+}));
+
+import apiClient from '../services/apiClient';
+const mockedClient = vi.mocked(apiClient, true);
 
 // Mock de import.meta.env
 vi.stubEnv('VITE_API_URL', 'http://localhost:8000/v1');
@@ -37,17 +52,17 @@ describe('CandidateService', () => {
         { id: '1', name: 'Ana García', email: 'ana@test.com' },
         { id: '2', name: 'Carlos López', email: 'carlos@test.com' },
       ];
-      mockedAxios.get.mockResolvedValueOnce({ data: mockCandidates });
+      mockedClient.get.mockResolvedValueOnce({ data: mockCandidates });
 
       const result = await CandidateService.listCandidates();
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedClient.get).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockCandidates);
       expect(result).toHaveLength(2);
     });
 
     it('should throw on network error', async () => {
-      mockedAxios.get.mockRejectedValueOnce(new Error('Network Error'));
+      mockedClient.get.mockRejectedValueOnce(new Error('Network Error'));
 
       await expect(CandidateService.listCandidates()).rejects.toThrow('Network Error');
     });
@@ -56,7 +71,7 @@ describe('CandidateService', () => {
   describe('getCandidate', () => {
     it('should fetch a single candidate by ID', async () => {
       const mockCandidate = { id: '1', name: 'Ana García', email: 'ana@test.com' };
-      mockedAxios.get.mockResolvedValueOnce({ data: mockCandidate });
+      mockedClient.get.mockResolvedValueOnce({ data: mockCandidate });
 
       const result = await CandidateService.getCandidate('1');
 
@@ -65,10 +80,10 @@ describe('CandidateService', () => {
     });
 
     it('should handle undefined ID gracefully', async () => {
-      mockedAxios.get.mockResolvedValueOnce({ data: null });
+      mockedClient.get.mockResolvedValueOnce({ data: null });
 
       await CandidateService.getCandidate(undefined);
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedClient.get).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -87,17 +102,17 @@ describe('CandidateService', () => {
         skills: 'Python, React',
       };
       
-      mockedAxios.post.mockResolvedValueOnce({ data: { ...newCandidate, id: '3' } });
+      mockedClient.post.mockResolvedValueOnce({ data: { ...newCandidate, id: '3' } });
 
       const result = await CandidateService.createCandidate(newCandidate);
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      expect(mockedClient.post).toHaveBeenCalledTimes(1);
       expect(result.id).toBe('3');
       expect(result.name).toBe('Test User');
     });
 
     it('should throw on validation error (422)', async () => {
-      mockedAxios.post.mockRejectedValueOnce({
+      mockedClient.post.mockRejectedValueOnce({
         response: { status: 422, data: { detail: 'Validation error' } }
       });
 
@@ -123,27 +138,27 @@ describe('CandidateService', () => {
         skills: '',
       };
 
-      mockedAxios.put.mockResolvedValueOnce({ data: { ...update, id: '1' } });
+      mockedClient.put.mockResolvedValueOnce({ data: { ...update, id: '1' } });
 
       const result = await CandidateService.editCandidate('1', update);
 
-      expect(mockedAxios.put).toHaveBeenCalledTimes(1);
+      expect(mockedClient.put).toHaveBeenCalledTimes(1);
       expect(result.name).toBe('Ana Updated');
     });
   });
 
   describe('deleteCandidate', () => {
     it('should delete a candidate by ID', async () => {
-      mockedAxios.delete.mockResolvedValueOnce({ data: { id: '1', name: 'Deleted' } });
+      mockedClient.delete.mockResolvedValueOnce({ data: { id: '1', name: 'Deleted' } });
 
       const result = await CandidateService.deleteCandidate('1');
 
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
+      expect(mockedClient.delete).toHaveBeenCalledTimes(1);
       expect(result.name).toBe('Deleted');
     });
 
     it('should throw on 404', async () => {
-      mockedAxios.delete.mockRejectedValueOnce({
+      mockedClient.delete.mockRejectedValueOnce({
         response: { status: 404, data: { detail: 'Not found' } }
       });
 
@@ -169,7 +184,7 @@ describe('InsightsService', () => {
           suggested_role: 'Tech Lead',
         },
       };
-      mockedAxios.get.mockResolvedValueOnce({ data: mockInsights });
+      mockedClient.get.mockResolvedValueOnce({ data: mockInsights });
 
       const result = await InsightsService.getCandidateInsights('1');
 
@@ -189,7 +204,7 @@ describe('InsightsService', () => {
           suggested_role: 'N/A',
         },
       };
-      mockedAxios.get.mockResolvedValueOnce({ data: timeoutResponse });
+      mockedClient.get.mockResolvedValueOnce({ data: timeoutResponse });
 
       const result = await InsightsService.getCandidateInsights('1');
       expect(result.insights.score).toBe(0);
