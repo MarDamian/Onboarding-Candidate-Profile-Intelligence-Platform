@@ -133,3 +133,26 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 - **Flask**: Workers con timeout extendido para procesos ETL de larga duración
 - **React**: Ejecuta servidor de desarrollo
 - **Svelte**: Ejecuta servidor de desarrollo
+
+### Testing y CI
+
+#### Estrategia de Testing
+- **Unit tests**: Lógica de negocio aislada (schemas, compresión, prompts, transformaciones)
+- **Integration tests**: Endpoints completos con base de datos en memoria (SQLite)
+- **Service mocks**: Servicios externos mockeados (Qdrant, Cohere, Redis) para determinismo
+
+#### CI/CD - GitHub Actions
+Pipeline automatizado (`.github/workflows/ci.yml`) con 6 jobs paralelos:
+
+1. **test-fastapi**: Python 3.12, pytest con cobertura
+2. **test-flask**: Python 3.12, pytest con cobertura
+3. **test-pipelines**: Python 3.12, pytest con cobertura
+4. **test-react**: Node 22, Vitest + ESLint
+5. **check-rust**: Rust stable, `cargo check` + `cargo clippy`
+6. **docker-build**: Validación de docker-compose e imágenes (requiere jobs 1-4)
+
+Features del pipeline:
+- Cache de dependencias (pip, npm, cargo)
+- Concurrencia controlada (cancela runs previos del mismo PR)
+- Artefactos de cobertura por servicio
+- Variables de entorno de test automáticas
