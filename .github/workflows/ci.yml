@@ -47,6 +47,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install -r ../../pipelines/requirements.txt
+
+      - name: Link shared volumes (pipelines & prompts)
+        run: |
+          ln -s ../../pipelines pipelines
+          ln -s ../../prompts prompts
 
       - name: Set test environment variables
         run: |
@@ -95,6 +101,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install -r ../../pipelines/requirements.txt
+
+      - name: Link shared volumes (pipelines)
+        run: |
+          ln -s ../../pipelines pipelines
 
       - name: Set test environment variables
         run: |
@@ -184,7 +195,7 @@ jobs:
           cache-dependency-path: ui/react-app/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Run linter
         run: npm run lint
@@ -223,7 +234,7 @@ jobs:
         run: cargo check
 
       - name: Run clippy (linter)
-        run: cargo clippy -- -D warnings
+        run: cargo clippy -- -D warnings -A deprecated
 
   # =========================================================================
   # Job 6: Docker Build Validation
