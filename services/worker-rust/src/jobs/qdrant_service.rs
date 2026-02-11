@@ -26,8 +26,8 @@ impl QdrantService {
         distance_metric: &str,
     ) -> Result<Self> {
         let client = QdrantClient::from_url(url)
-            .timeout(Duration::from_secs(10))
-            .connect_timeout(Duration::from_secs(5))
+            .set_timeout(Duration::from_secs(10))
+            .set_connect_timeout(Duration::from_secs(5))
             .build()
             .context("Failed to create Qdrant client")?;
 
