@@ -67,7 +67,7 @@ describe('CandidateService', () => {
     it('should handle undefined ID gracefully', async () => {
       mockedAxios.get.mockResolvedValueOnce({ data: null });
 
-      const result = await CandidateService.getCandidate(undefined);
+      await CandidateService.getCandidate(undefined);
       expect(mockedAxios.get).toHaveBeenCalledTimes(1);
     });
   });
@@ -102,6 +102,7 @@ describe('CandidateService', () => {
       });
 
       await expect(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         CandidateService.createCandidate({ name: 'Incomplete' } as any)
       ).rejects.toBeDefined();
     });

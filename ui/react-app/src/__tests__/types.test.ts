@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { Candidate, CandidateCreate, CandidateUpdate } from '../types/candidate';
+import type { Candidate, CandidateCreate } from '../types/candidate';
 import type { CandidateInsight, InsightResponse } from '../types/insight';
 
 describe('Candidate Types', () => {
