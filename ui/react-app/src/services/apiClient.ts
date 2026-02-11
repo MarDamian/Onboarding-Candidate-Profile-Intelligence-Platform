@@ -4,6 +4,7 @@ const apiClient = axios.create({
     timeout: 10000,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 apiClient.interceptors.response.use(undefined, async (err: any) => {
     const { config } = err;
 
