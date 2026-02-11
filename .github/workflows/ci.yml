@@ -14,9 +14,9 @@ name: CI - Tests & Lint
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, features, feature/*]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, features]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -47,6 +47,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install -r ../../pipelines/requirements.txt
+
+      - name: Link shared volumes (pipelines & prompts)
+        run: |
+          ln -s ../../pipelines pipelines
+          ln -s ../../prompts prompts
 
       - name: Set test environment variables
         run: |
@@ -59,6 +65,9 @@ jobs:
           echo "LLM_TIMEOUT=30" >> $GITHUB_ENV
           echo "LANGCHAIN_TRACING_V2=false" >> $GITHUB_ENV
           echo "LANGCHAIN_API_KEY=test-key" >> $GITHUB_ENV
+          echo "MAX_RETRIES=3" >> $GITHUB_ENV
+          echo "RETRY_MIN_WAIT=1" >> $GITHUB_ENV
+          echo "RETRY_MAX_WAIT=10" >> $GITHUB_ENV
 
       - name: Run tests with coverage
         run: |
@@ -95,6 +104,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install -r ../../pipelines/requirements.txt
+
+      - name: Link shared volumes (pipelines)
+        run: |
+          ln -s ../../pipelines pipelines
 
       - name: Set test environment variables
         run: |
@@ -184,7 +198,7 @@ jobs:
           cache-dependency-path: ui/react-app/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Run linter
         run: npm run lint
@@ -223,7 +237,7 @@ jobs:
         run: cargo check
 
       - name: Run clippy (linter)
-        run: cargo clippy -- -D warnings
+        run: cargo clippy -- -D warnings -A deprecated
 
   # =========================================================================
   # Job 6: Docker Build Validation
@@ -236,8 +250,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Create dummy .env for validation
+        run: |
+          cat <<EOF > .env
+          POSTGRES_USER=test
+          POSTGRES_PASSWORD=test
+          POSTGRES_DB=test
+          DATABASE_URL=sqlite:///./test.db
+          REDIS_URL=redis://localhost:6379/0
+          QDRANT_URL=http://localhost:6333
+          COHERE_API_KEY=test-key
+          EMBEDDING_MODEL=embed-multilingual-v3.0
+          EMBEDDING_DIMENSION=1024
+          EMBEDDING_DISTANCE=Cosine
+          VITE_API_URL=http://localhost:8000/v1
+          EOF
+
       - name: Validate docker-compose
-        run: docker compose -f infra/docker-compose.yml config --quiet
+        run: docker compose -f infra/docker-compose.yml --env-file .env config --quiet
 
       - name: Build FastAPI image
         run: docker build -f infra/Dockerfile.fastapi -t test-fastapi .

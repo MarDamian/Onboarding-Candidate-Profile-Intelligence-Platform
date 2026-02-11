@@ -4,7 +4,6 @@ import {
     Button,
     Tooltip,
     Divider,
-    ScrollShadow,
     Avatar,
     cn,
 } from "@heroui/react";
@@ -44,7 +43,7 @@ export const AppSidebar = ({ className }: AppSidebarProps) => {
         setIsMobileOpen(false);
     };
 
-    const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => {
+    const sidebarContent = (isMobile = false) => {
         const collapsed = !isMobile && isCollapsed;
 
         return (
@@ -162,6 +161,7 @@ export const AppSidebar = ({ className }: AppSidebarProps) => {
     };
 
     return (
+
         <>
             <button
                 onClick={() => setIsMobileOpen(true)}
@@ -184,7 +184,7 @@ export const AppSidebar = ({ className }: AppSidebarProps) => {
                     isMobileOpen ? "translate-x-0" : "-translate-x-full"
                 )}
             >
-                <SidebarContent isMobile />
+                {sidebarContent(true)}
             </aside>
 
             <aside
@@ -194,7 +194,7 @@ export const AppSidebar = ({ className }: AppSidebarProps) => {
                     className
                 )}
             >
-                <SidebarContent />
+                {sidebarContent()}
             </aside>
         </>
     );
