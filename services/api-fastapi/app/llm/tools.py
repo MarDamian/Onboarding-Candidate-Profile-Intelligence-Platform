@@ -1,4 +1,5 @@
 from langchain.tools import tool
+from app.core.utils import external_api_retry
 from app.db.database import SessionLocal
 from app.db.models.candidate import Candidate
 import os, httpx
@@ -33,6 +34,7 @@ def get_candidate_profile(candidate_id: int) -> dict:
         db.close()
 
 @tool
+@external_api_retry
 def search_similar_profiles(candidate_id: int, limit: int = 3) -> str:
     """
     Busca candidatos similares a un candidato específico utilizando su ID.
@@ -59,7 +61,9 @@ def search_similar_profiles(candidate_id: int, limit: int = 3) -> str:
             return str(results.get("results", []))
 
     except httpx.RequestError as exc:
-        return f"Error de conexión al intentar buscar similares: {exc}"
+        raise exc
+    except httpx.HTTPStatusError as exc:
+        return f"Error HTTP {exc.response.status_code}: {exc.response.text}"
     except Exception as e:
         return f"Error inesperado: {str(e)}"
 
