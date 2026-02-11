@@ -201,10 +201,28 @@ Durante este día se implementa:
     -   Componente wrapper `SimilarProfiles.tsx` en React
     -   Despliegue integrado en la vista de detalle de candidato
 
+**Semana 3 - Día 18 - Pruebas Automatizadas y CI**
+
+- **Suite completa de pruebas automatizadas**
+  - FastAPI: (endpoints CRUD, schemas Pydantic, compresión de contexto, prompt loader, búsqueda semántica, insights LLM)
+  - Flask: (rutas ETL, rutas Qdrant, ETL manager)
+  - React: (servicios API, tipos TypeScript, routing)
+  - Pipelines ETL: (extract, transform, load, embeddings service)
+- **CI/CD con GitHub Actions**
+  - Workflow `.github/workflows/ci.yml`
+  - Jobs: test-fastapi, test-flask, test-pipelines, test-react, check-rust, docker-build
+  - Cache de dependencias (pip, npm, cargo) para builds rápidos
+- **Bug fix en producción detectado por tests**
+  - `search.py`: `except Exception` capturaba `HTTPException(404)` y la re-lanzaba como 500
+  - Fix: `except HTTPException: raise` antes del handler genérico
+- **Integración con Docker**
+  - Servicios de test con profiles en docker-compose
+  - Ejecución via `docker exec` en contenedores activos
+  - Dockerfile.pipelines para tests aislados de ETL
+
 **Pendiente:**
 
-Semana 3:
-- Día 16 - Pruebas automatizadas y CI - Logs estructurados - Timeouts y reintentos
+- Día 16 - Logs estructurados - Timeouts y reintentos
 - Día 17 - Documentación final - Demo completa
 
 ## Features (objetivo final)
@@ -266,6 +284,21 @@ Semana 3:
   - Servicio de Insights con 3 tipos de análisis (summary, score, comparison)
   - Prompts versionados para A/B testing
 
+### Testing
+
+- **pytest 8.3.5 + pytest-cov**: Tests unitarios e integración para Python
+  - SQLite in-memory para aislamiento de DB
+  - Mocks de servicios externos (Qdrant, Cohere, Redis)
+  - Cobertura de código con reportes XML
+- **Vitest 3.2 + @testing-library/react**: Tests de frontend
+  - jsdom como entorno de ejecución
+  - Testing Library para interacción con componentes
+  - Mocks de axios para servicios API
+- **GitHub Actions CI/CD**: Pipeline automatizado
+  - 6 jobs paralelos (FastAPI, Flask, Pipelines, React, Rust, Docker)
+  - Cache de dependencias para builds rápidos
+  - Artefactos de cobertura por servicio
+
 ### Frontend
 
 - **React + TypeScript**: Interfaz principal
@@ -288,6 +321,7 @@ Semana 3:
   - Red compartida entre servicios
   - Hot reload en desarrollo
 - **Git**: Control de versiones
+- **GitHub Actions**: CI con tests automatizados en cada push/PR
 
 ## Servicios y puertos
 
@@ -346,6 +380,10 @@ infra/
 └── db/
     └── init.sql                   # Script de inicialización de DB
 
+.github/
+└── workflows/
+    └── ci.yml                     # Pipeline CI (jobs paralelos)
+
 services/
 ├── api-fastapi/                   # API principal (CRUD + búsqueda)
 │   ├── alembic/                   # Migraciones de base de datos
@@ -355,6 +393,7 @@ services/
 │   │   ├── db/                    # Modelos y conexión
 │   │   ├── schemas/               # Validación con Pydantic
 │   │   └──  llm/
+│   ├── tests/                     # tests (pytest)
 │   ├── scripts/
 │   ├── requirements.txt
 │   └── alembic.ini
@@ -365,6 +404,7 @@ services/
 │   │   ├── core/                  # Configuración
 │   │   ├── services/              # Lógica de ETL
 │   │   └── __init__.py
+│   ├── tests/                     # tests (pytest)
 │   ├── requirements.txt
 │   └── run.py
 │
@@ -376,6 +416,7 @@ services/
 ui/
 └── react-app/                     # Interfaz de usuario
 │    ├── src/
+│    │   ├── __tests__/             # tests (Vitest)
 │    │   ├── components/            # Componentes reutilizables
 │    │   ├── pages/                 # Páginas de la aplicación
 │    │   ├── services/              # Cliente API
@@ -392,6 +433,7 @@ ui/
 
 pipelines/
 ├── etl/                           # Pipeline ETL modular
+├── tests/                         # tests (pytest)
 └── utils/                         # Servicios de Embedding y busqueda Semantica
 
 prompts/
@@ -416,24 +458,17 @@ prompts/
 
 Para continuar con el desarrollo del proyecto:
 
-1. **Testing & Optimizaciones (Semana 3)**
-   - Suite completa de unit tests para componentes LLM
-   - Tests de integración para endpoints de insights
+1. **Optimizaciones de Performance**
    - Implementación de caching con Redis
    - Rate limiting y quota management
+   - Optimización de queries a PostgreSQL
 
 2. **Monitoreo y Observabilidad**
    - Dashboards Grafana para métricas de insights
    - Alertas para latencia y costo de tokens
    - Logging centralizado con ELK
 
-3. **Microfrontend en Svelte**
-   - Vista especializada de análisis de candidatos
-   - Integración con la aplicación React principal
-   - Module Federation para carga lazy
-
-4. **Optimizaciones de Cohere API**
-   - Migración de embeddings locales a Cohere (4 fases)
+3. **Optimizaciones de Cohere API**
    - Fine-tuning de prompts con feedback
    - A/B testing de modelos y temperaturas
 

@@ -104,6 +104,32 @@ curl -X POST http://localhost:5000/v1/admin/etl/sync
 docker compose -f infra/docker-compose.yml logs worker_rust --tail 20
 ```
 
+## Pruebas Automatizadas
+
+El proyecto cuenta con **116 tests** distribuidos en 4 suites. Los tests se ejecutan dentro de los contenedores Docker activos.
+
+### Ejecutar todos los tests
+```bash
+# FastAPI 
+docker exec fastapi_app python -m pytest tests/ -v
+
+# Flask 
+docker exec flask_admin python -m pytest tests/ -v
+
+# React 
+docker exec react_app npm run test
+
+# Pipelines ETL 
+docker exec fastapi_app python -m pytest pipelines/tests/ -v
+```
+
+### CI
+El proyecto incluye un workflow de GitHub Actions (`.github/workflows/ci.yml`) que ejecuta automáticamente todos los tests en cada push y pull request. Los jobs corren en paralelo:
+- `test-fastapi`, `test-flask`, `test-pipelines` (Python + pytest)
+- `test-react` (Vitest)
+- `check-rust` (cargo check)
+- `docker-build` (validación de build)
+
 ## Flujo de PR (IMPORTANTE)
 
 ### Flujo de trabajo
