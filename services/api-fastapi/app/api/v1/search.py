@@ -81,6 +81,8 @@ def search_similar(
             "results": results
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
