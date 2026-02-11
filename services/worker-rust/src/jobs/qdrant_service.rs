@@ -8,6 +8,7 @@ use qdrant_client::{
 };
 use serde_json::Map;
 use std::collections::HashMap;
+use std::time::Duration;
 use tracing::info;
 
 pub struct QdrantService {
@@ -25,6 +26,8 @@ impl QdrantService {
         distance_metric: &str,
     ) -> Result<Self> {
         let client = QdrantClient::from_url(url)
+            .timeout(Duration::from_secs(10))
+            .connect_timeout(Duration::from_secs(5))
             .build()
             .context("Failed to create Qdrant client")?;
 
