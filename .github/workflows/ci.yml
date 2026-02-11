@@ -65,6 +65,9 @@ jobs:
           echo "LLM_TIMEOUT=30" >> $GITHUB_ENV
           echo "LANGCHAIN_TRACING_V2=false" >> $GITHUB_ENV
           echo "LANGCHAIN_API_KEY=test-key" >> $GITHUB_ENV
+          echo "MAX_RETRIES=3" >> $GITHUB_ENV
+          echo "RETRY_MIN_WAIT=1" >> $GITHUB_ENV
+          echo "RETRY_MAX_WAIT=10" >> $GITHUB_ENV
 
       - name: Run tests with coverage
         run: |
