@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use tokio_postgres::{Client, NoTls};
+use tokio::time::{timeout, Duration};
 use tracing::{info, error};
 
 #[derive(Debug, Clone)]
@@ -18,11 +19,15 @@ pub struct DatabaseService {
 
 impl DatabaseService {
     pub async fn new(database_url: &str) -> Result<Self> {
-        let (client, connection) = tokio_postgres::connect(database_url, NoTls)
-            .await
-            .context("Failed to connect to PostgreSQL")?;
+        let (client, connection) = timeout(
+            Duration::from_secs(10),
+            tokio_postgres::connect(database_url, NoTls)
+        )
+        .await
+        .context("Connection to PostgreSQL timed out")?
+        .context("Failed to connect to PostgreSQL")?;
 
-        // Spawn connection handler
+        // Maneja la conexión de la base de datos
         tokio::spawn(async move {
             if let Err(e) = connection.await {
                 error!("PostgreSQL connection error: {}", e);
@@ -46,10 +51,13 @@ impl DatabaseService {
             WHERE last_indexed_at IS NULL OR updated_at > last_indexed_at
         ";
 
-        let rows = self.client
-            .query(query, &[])
-            .await
-            .context("Failed to query stale candidates")?;
+        let rows = timeout(
+            Duration::from_secs(10),
+            self.client.query(query, &[])
+        )
+        .await
+        .context("Query for stale candidates timed out")?
+        .context("Failed to query stale candidates")?;
 
         let candidates: Vec<Candidate> = rows
             .iter()
@@ -75,10 +83,13 @@ impl DatabaseService {
 
         let query = "UPDATE candidates SET last_indexed_at = NOW() WHERE id = ANY($1)";
         
-        self.client
-            .execute(query, &[&candidate_ids])
-            .await
-            .context("Failed to mark candidates as indexed")?;
+        timeout(
+            Duration::from_secs(10),
+            self.client.execute(query, &[&candidate_ids])
+        )
+        .await
+        .context("Updating last_indexed_at timed out")?
+        .context("Failed to mark candidates as indexed")?;
 
         info!("Marked {} candidates as indexed", candidate_ids.len());
         Ok(())

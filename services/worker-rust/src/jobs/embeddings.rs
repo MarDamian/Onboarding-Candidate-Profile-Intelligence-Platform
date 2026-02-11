@@ -1,6 +1,9 @@
 use anyhow::{Context, Result};
 use reqwest::Client;
+use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
+use reqwest_retry::{RetryTransientMiddleware, policies::ExponentialBackoff};
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 use tracing::warn;
 
 #[derive(Debug, Serialize)]
@@ -23,7 +26,7 @@ struct Embeddings {
 }
 
 pub struct EmbeddingsService {
-    client: Client,
+    client: ClientWithMiddleware,
     api_key: String,
     model: String,
     expected_dimension: usize,
@@ -31,8 +34,18 @@ pub struct EmbeddingsService {
 
 impl EmbeddingsService {
     pub fn new(api_key: String, model: String, dimension: usize) -> Self {
+        let retry_policy = ExponentialBackoff::builder().build_with_max_retries(3);
+        let client = ClientBuilder::new(
+            Client::builder()
+                .timeout(Duration::from_secs(30))
+                .build()
+                .expect("Failed to create reqwest client")
+        )
+        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+        .build();
+
         Self {
-            client: Client::new(),
+            client,
             api_key,
             model,
             expected_dimension: dimension,
