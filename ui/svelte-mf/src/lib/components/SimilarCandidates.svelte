@@ -1,26 +1,22 @@
 <script lang="ts">
+  import {
+    fetchSimilarCandidates,
+    type Candidate,
+  } from "../services/candidateService";
+
   export let candidateId: number;
 
   let loading = false;
   let error: string | null = null;
-  let similarCandidates: any[] = [];
-  let totalResults = 0;
+  let similarCandidates: Candidate[] = [];
 
-  async function fetchSimilarCandidates() {
+  async function loadCandidates() {
     if (!candidateId) return;
-    
     loading = true;
     error = null;
-    similarCandidates = [];
-
     try {
-      const response = await fetch(`http://localhost:8000/v1/semantic_search/similar/${candidateId}?limit=3`);
-      if (!response.ok) {
-        throw new Error(`Error fetching similar candidates: ${response.statusText}`);
-      }
-      const result = await response.json();
-      similarCandidates = result.results;
-      totalResults = result.total_results;
+      const data = await fetchSimilarCandidates(candidateId);
+      similarCandidates = data.results;
     } catch (e: any) {
       error = e.message;
     } finally {
@@ -29,11 +25,11 @@
   }
 
   function formatScore(score: number): string {
-    return (score * 100).toFixed(0) + '%';
+    return (score * 100).toFixed(0) + "%";
   }
 
   $: if (candidateId) {
-    fetchSimilarCandidates();
+    loadCandidates();
   }
 </script>
 
@@ -54,15 +50,22 @@
       {#each similarCandidates as candidate}
         <div class="candidate-card">
           <div class="card-header">
-            <div class="score-badge" style="--score-color: {candidate.score > 0.8 ? '#059669' : '#d97706'}">
+            <div
+              class="score-badge"
+              style="--score-color: {candidate.score > 0.8
+                ? '#059669'
+                : '#d97706'}"
+            >
               {formatScore(candidate.score)} Match
             </div>
-            <h3>{candidate.name || 'Unknown Candidate'}</h3>
+            <h3>{candidate.name || "Unknown Candidate"}</h3>
           </div>
-          
+
           <div class="card-body">
             <p class="summary-text">
-              {candidate.text_content ? candidate.text_content.slice(0, 150) + '...' : 'No description available.'}
+              {candidate.text_content
+                ? candidate.text_content.slice(0, 150) + "..."
+                : "No description available."}
             </p>
           </div>
         </div>
@@ -77,7 +80,11 @@
 
 <style>
   .similar-panel {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      sans-serif;
     max-width: 800px;
     margin: 0 auto;
     padding: 1rem;
@@ -112,8 +119,12 @@
   }
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 
   .error {

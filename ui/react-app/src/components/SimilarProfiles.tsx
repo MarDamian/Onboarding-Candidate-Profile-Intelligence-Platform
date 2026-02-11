@@ -1,20 +1,24 @@
-type Props = {
+interface Props {
   candidateId: number;
-};
+}
+
+const BASE_URL = import.meta.env.VITE_SVELTE_URL
 
 export const SimilarProfiles = ({ candidateId }: Props) => {
-  const url = `http://localhost:5174/?candidateId=${candidateId}`;
+  const url = `${BASE_URL}/?id=${candidateId}`;
 
   return (
-    <div className="w-full h-[calc(100vh-100px)]">
+    <div className="w-full h-[calc(100vh-100px)] overflow-hidden">
       <iframe
         src={url}
         scrolling="no"
+        width="100%"
+        height="100%"
         style={{
-          width: "100%",
-          height: "100%",
+          border: "none",
         }}
         title="Svelte Microfrontend"
+        loading="lazy"
       />
     </div>
   );
