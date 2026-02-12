@@ -38,6 +38,7 @@ export const EditPage = () => {
 
     useEffect(() => {
         fetchCandidate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, reset]);
 
     const onSubmit = async (data: CandidateUpdate) => {

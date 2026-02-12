@@ -24,10 +24,10 @@ export const Insight = ({ candidateId }: Props) => {
         try {
             const response = await InsightsService.getCandidateInsights(candidateId);
             setData(response.insights);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error fetching insights:", err);
             setError(
-                err.message ||
+                (err instanceof Error ? err.message : null) ||
                 "No pudimos generar el análisis de IA en este momento. Intenta más tarde."
             );
         } finally {
@@ -37,6 +37,7 @@ export const Insight = ({ candidateId }: Props) => {
 
     useEffect(() => {
         fetchInsights();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [candidateId]);
 
     if (loading) {
