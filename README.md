@@ -21,7 +21,7 @@ Construir un sistema completamente funcional que permita:
 - [x] Modelo de dominio definido
 - [x] CRUD completo en FastAPI
 - [x] Validaciones con Pydantic
-- [ ] Manejo estándar de errores (revisar)
+- [x] Manejo estándar de errores 
 - [x] OpenAPI documentado
 
 **Frontend React**
