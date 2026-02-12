@@ -13,6 +13,7 @@ async fn main() -> Result<()> {
     // Initialize environment and logging
     dotenvy::dotenv().ok();
     tracing_subscriber::fmt()
+        .json()
         .with_env_filter("info")
         .init();
 

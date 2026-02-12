@@ -447,6 +447,8 @@ prompts/
 - **[Arquitectura](docs/arquitecture.md)**: Decisiones de diseño y patrones utilizados
 - **[API Reference](docs/api.md)**: Documentación completa de endpoints
 - **[ADRs](docs/adrs/)**: Decisiones arquitectónicas registradas
+  - **ADR 008**: Logs Estructurados en formato JSON
+  - **ADR 007**: Manejo de Timeouts y Reintentos
   - **ADR 006**: Worker Batch en Rust para Procesamiento Asíncrono
   - **ADR 005**: Integración de LLM Cohere y Embeddings API
   - **ADR 004**: Vector Search con Qdrant

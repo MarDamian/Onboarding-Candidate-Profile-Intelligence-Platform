@@ -28,6 +28,7 @@ impl QdrantService {
         let mut config = QdrantClient::from_url(url);
         config.set_timeout(Duration::from_secs(10));
         config.set_connect_timeout(Duration::from_secs(5));
+        
         let client = config
             .build()
             .context("Failed to create Qdrant client")?;
