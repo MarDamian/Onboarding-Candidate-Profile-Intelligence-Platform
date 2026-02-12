@@ -15,21 +15,7 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-_redis_client: redis.Redis | None = None
-
-
-def _get_redis() -> redis.Redis:
-    """Obtiene o crea la conexión Redis (singleton lazy)."""
-    global _redis_client
-    if _redis_client is None:
-        _redis_client = redis.from_url(
-            settings.REDIS_URL,
-            decode_responses=True,
-            socket_connect_timeout=5,
-            socket_timeout=5,
-        )
-    return _redis_client
-
+from app.core.redis import get_redis_client
 
 def enqueue_single_index(candidate_id: int, requested_by: str = "fastapi") -> None:
     """Encola un job para indexar un candidato individual tras create/update."""
@@ -40,7 +26,7 @@ def enqueue_single_index(candidate_id: int, requested_by: str = "fastapi") -> No
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     try:
-        _get_redis().rpush(settings.REDIS_QUEUE, json.dumps(payload))
+        get_redis_client().rpush(settings.REDIS_QUEUE, json.dumps(payload))
         logger.info(
             "Job single_index encolado",
             extra={"candidate_id": candidate_id},
@@ -62,7 +48,7 @@ def enqueue_delete_point(candidate_id: int, requested_by: str = "fastapi") -> No
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     try:
-        _get_redis().rpush(settings.REDIS_QUEUE, json.dumps(payload))
+        get_redis_client().rpush(settings.REDIS_QUEUE, json.dumps(payload))
         logger.info(
             "Job delete_point encolado",
             extra={"candidate_id": candidate_id},
