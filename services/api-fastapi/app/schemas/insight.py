@@ -7,4 +7,7 @@ class InsightSchema(BaseModel):
     strengths: List[str] = Field(description="Lista de fortalezas")
     weaknesses: List[str] = Field(description="Lista de áreas de mejora")
     suggested_role: str = Field(description="Rol sugerido para el candidato")
-    
+
+class InsightResponse(BaseModel):
+    candidate_id: int
+    insights: dict[str, InsightSchema]

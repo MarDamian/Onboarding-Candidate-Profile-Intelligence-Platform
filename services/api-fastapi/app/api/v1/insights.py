@@ -2,13 +2,14 @@ from fastapi import APIRouter, HTTPException
 from app.llm.agent import Agent
 from app.db.database import SessionLocal
 from app.db.models.candidate import Candidate
-from app.schemas.insight import InsightSchema
+from app.schemas.insight import InsightResponse
 from app.llm.compression import ContextCompressor
+from typing import Union
 
 router = APIRouter(prefix="/insights",tags=["LLM Insights"])
 
 @router.get("/{candidate_id}",
-    response_model=InsightSchema,
+    response_model=InsightResponse,
     responses={
         200: {"description": "Candidate insights generated successfully"},
         404: {"description": "Candidate not found"},
