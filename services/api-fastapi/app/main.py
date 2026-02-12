@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from app.api.v1 import candidate, search, insights
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.logging_config import setup_logging
+
+# Initialize structured logging
+setup_logging()
 
 app = FastAPI(
     title="Candidate Profile Intelligence Platform API",
