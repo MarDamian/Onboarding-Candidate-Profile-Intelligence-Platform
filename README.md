@@ -32,7 +32,7 @@ Construir un sistema completamente funcional que permita:
 
 **ETL**
 - [x] Idempotencia
-- [ ] Validaciones (revisar)
+- [x] Validaciones (hacer validación)
 - [ ] Tracking de ejecuciones (revisar)
 - [ ] Endpoint administrativo (revisar)
 
