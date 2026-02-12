@@ -10,4 +10,4 @@ class InsightSchema(BaseModel):
 
 class InsightResponse(BaseModel):
     candidate_id: int
-    insights: dict[str, InsightSchema]
+    insights: InsightSchema

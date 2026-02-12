@@ -4,7 +4,6 @@ from app.db.database import SessionLocal
 from app.db.models.candidate import Candidate
 from app.schemas.insight import InsightResponse
 from app.llm.compression import ContextCompressor
-from typing import Union
 
 router = APIRouter(prefix="/insights",tags=["LLM Insights"])
 
