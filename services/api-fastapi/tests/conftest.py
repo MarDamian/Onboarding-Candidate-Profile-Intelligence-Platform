@@ -32,6 +32,8 @@ mock_settings.LANGCHAIN_TRACING_V2 = False
 mock_settings.LANGCHAIN_API_KEY = "test-key"
 mock_settings.REDIS_URL = "redis://localhost:6379"
 mock_settings.REDIS_QUEUE = "jobs:etl"
+mock_settings.GROQ_API_KEY = "test-key"
+mock_settings.FALLBACK_MODEL_NAME = "llama-3.3-70b-versatile"
 
 with patch.dict("os.environ", {
     "DATABASE_URL": "sqlite:///./test.db",
@@ -45,6 +47,8 @@ with patch.dict("os.environ", {
     "LANGCHAIN_API_KEY": "test-key",
     "REDIS_URL": "redis://localhost:6379",
     "REDIS_QUEUE": "jobs:etl",
+    "GROQ_API_KEY": "test-key",
+    "FALLBACK_MODEL_NAME": "llama-3.3-70b-versatile",
 }):
     with patch("app.core.config.settings", mock_settings):
         from app.db.database import Base, get_db
