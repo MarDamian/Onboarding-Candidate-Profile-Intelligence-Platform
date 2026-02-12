@@ -35,6 +35,31 @@ class ETLManager:
             "queue": self.queue_name,
             "job_payload": job_payload
         }
+
+    def trigger_full_reindex(self, requested_by: str = "api"):
+        """
+        Envía un job de full_reindex a la cola de Redis.
+        El worker Rust limpiará Qdrant, reseteará last_indexed_at y re-indexará todo.
+        
+        Args:
+            requested_by: Usuario o sistema que solicita el job
+            
+        Returns:
+            dict: Información del job encolado
+        """
+        job_payload = {
+            "job_type": "full_reindex",
+            "requested_by": requested_by,
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        }
+        
+        self.redis_client.rpush(self.queue_name, json.dumps(job_payload))
+        
+        return {
+            "status": "job_queued",
+            "queue": self.queue_name,
+            "job_payload": job_payload
+        }
     
     def trigger_sync_direct(self):
         """

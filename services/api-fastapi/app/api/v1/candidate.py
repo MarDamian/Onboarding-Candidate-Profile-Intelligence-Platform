@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from app.db.models.candidate import Candidate
 from app.db.database import get_db
 from app.schemas.candidate import CandidateCreate, CandidateRead, CandidateUpdate
+from app.core.index_queue import enqueue_single_index, enqueue_delete_point
 import logging
 
 logger = logging.getLogger(__name__)
@@ -67,6 +68,9 @@ def create_candidate(candidate: CandidateCreate, db: Session = Depends(get_db)):
             f"Candidato creado exitosamente",
             extra={"candidate_id": new_candidate.id, "email": new_candidate.email}
         )
+        
+        # Auto-indexar en Qdrant via worker Rust
+        enqueue_single_index(new_candidate.id, requested_by="fastapi:create")
         
         return new_candidate
     
@@ -165,6 +169,9 @@ def update_candidate(candidate_id: int, candidate: CandidateUpdate, db: Session 
             extra={"candidate_id": candidate_id}
         )
 
+        # Re-indexar embedding actualizado en Qdrant via worker Rust
+        enqueue_single_index(candidate_id, requested_by="fastapi:update")
+
         return existing_candidate
     
     except IntegrityError as e:
@@ -226,5 +233,8 @@ def delete_candidate(candidate_id: int, db: Session = Depends(get_db)):
         f"Candidato eliminado exitosamente",
         extra={"candidate_id": candidate_id}
     )
+    
+    # Eliminar vector fantasma de Qdrant via worker Rust
+    enqueue_delete_point(candidate_id, requested_by="fastapi:delete")
     
     return candidate
