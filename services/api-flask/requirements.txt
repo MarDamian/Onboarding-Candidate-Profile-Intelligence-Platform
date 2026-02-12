@@ -38,4 +38,5 @@ psycopg2-binary==2.9.11
 cohere==5.20.2
 tenacity
 pytest==8.3.5
+python-json-logger
 pytest-cov==6.1.1
