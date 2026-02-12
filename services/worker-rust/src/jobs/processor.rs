@@ -60,6 +60,18 @@ impl JobProcessor {
                 info!("Job type: Embedding Batch");
                 self.process_embedding_batch(&job).await?;
             }
+            JobType::SingleIndex => {
+                info!("Job type: Single Index");
+                self.process_single_index(&job).await?;
+            }
+            JobType::DeletePoint => {
+                info!("Job type: Delete Point");
+                self.process_delete_point(&job).await?;
+            }
+            JobType::FullReindex => {
+                info!("Job type: Full Reindex");
+                self.process_full_reindex(&job).await?;
+            }
             JobType::Unknown(job_type) => {
                 warn!("Unknown job type: {}", job_type);
             }
@@ -158,5 +170,97 @@ impl JobProcessor {
         // Similar to ETL sync but could have different logic
         // For now, use the same implementation
         self.process_etl_sync(job).await
+    }
+
+    /// Indexa un único candidato por ID (para create/update automático)
+    async fn process_single_index(&self, job: &JobPayload) -> Result<()> {
+        let candidate_id = job.candidate_id.context(
+            "single_index job requires candidate_id"
+        )?;
+
+        info!("Indexing single candidate: {}", candidate_id);
+
+        // 1. Ensure collection exists
+        self.qdrant.ensure_collection().await
+            .context("Failed to ensure Qdrant collection")?;
+
+        // 2. Get candidate from database
+        let candidate = self.db.get_candidate_by_id(candidate_id).await
+            .context("Failed to get candidate from database")?;
+
+        let candidate = match candidate {
+            Some(c) => c,
+            None => {
+                warn!("Candidate {} not found in database, skipping", candidate_id);
+                return Ok(());
+            }
+        };
+
+        // 3. Generate embedding
+        let context_text = format!(
+            "{} | {} | Skills: {} | Experience: {}",
+            candidate.name, candidate.summary, candidate.skills, candidate.experience
+        );
+
+        let vectors = self.embeddings
+            .generate_embeddings_batch(vec![context_text.clone()])
+            .await
+            .context("Failed to generate embedding for single candidate")?;
+
+        let vector = vectors.into_iter().next()
+            .context("No embedding returned for candidate")?;
+
+        // 4. Upsert to Qdrant
+        let mut payload = HashMap::new();
+        payload.insert("name".to_string(), candidate.name.clone());
+        payload.insert("text_content".to_string(), context_text);
+        payload.insert("updated_at".to_string(), candidate.updated_at.clone());
+
+        self.qdrant.load_points(vec![(candidate.id, vector, payload)]).await
+            .context("Failed to upsert single point to Qdrant")?;
+
+        // 5. Mark as indexed
+        self.db.mark_as_indexed(&[candidate.id]).await
+            .context("Failed to mark candidate as indexed")?;
+
+        info!("Single candidate {} indexed successfully", candidate_id);
+        Ok(())
+    }
+
+    /// Elimina un punto de Qdrant (para delete automático)
+    async fn process_delete_point(&self, job: &JobPayload) -> Result<()> {
+        let candidate_id = job.candidate_id.context(
+            "delete_point job requires candidate_id"
+        )?;
+
+        info!("Deleting point for candidate: {}", candidate_id);
+
+        self.qdrant.delete_point(candidate_id).await
+            .context("Failed to delete point from Qdrant")?;
+
+        info!("Point for candidate {} deleted successfully", candidate_id);
+        Ok(())
+    }
+
+    /// Full reindex: resetea todos los candidatos y re-procesa todo via Rust 
+    async fn process_full_reindex(&self, job: &JobPayload) -> Result<()> {
+        info!("Starting full reindex");
+        info!("Requested by: {:?}", job.requested_by);
+
+        // 1. Clear all points from Qdrant
+        self.qdrant.clear_all_points().await
+            .context("Failed to clear Qdrant collection")?;
+
+        // 2. Reset all last_indexed_at in database
+        let reset_count = self.db.reset_all_indexed().await
+            .context("Failed to reset indexed status")?;
+        info!("Reset {} candidates for reindexing", reset_count);
+
+        // 3. Run the standard ETL sync (will pick up all candidates)
+        self.process_etl_sync(job).await
+            .context("Failed to process ETL sync during full reindex")?;
+
+        info!("Full reindex completed successfully");
+        Ok(())
     }
 }

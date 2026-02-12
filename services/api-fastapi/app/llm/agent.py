@@ -1,6 +1,7 @@
+from langchain_groq import ChatGroq
+from langchain_cohere import ChatCohere
 from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_cohere import ChatCohere
 
 from app.llm.tools import get_candidate_profile, search_similar_profiles, calculate_score
 from app.llm.prompt_loader import PromptLoader
@@ -12,12 +13,24 @@ import json, re, asyncio
 
 class Agent:
     def __init__(self):
-        self.llm = ChatCohere(
-            cohere_api_key=settings.COHERE_API_KEY,
+        # Modelo Principal (Cohere)
+        primary_llm = ChatCohere( 
             model=settings.MODEL_NAME,
+            cohere_api_key=settings.COHERE_API_KEY,
             temperature=settings.TEMPERATURE,
             max_tokens=settings.MAX_TOKENS
         )
+
+        # Modelo de Fallback con Groq
+        fallback_llm = ChatGroq(
+            model=settings.FALLBACK_MODEL_NAME,
+            groq_api_key=settings.GROQ_API_KEY,
+            temperature=settings.TEMPERATURE,
+            max_tokens=settings.MAX_TOKENS
+        )
+
+        # Configurar Fallback asíncrono y síncrono
+        self.llm = primary_llm.with_fallbacks([fallback_llm])
 
         self.tools = [
             get_candidate_profile,
@@ -43,6 +56,7 @@ class Agent:
             verbose=True,
             max_iterations=5,
         )
+
 
     @external_api_retry
     async def _generate_internal(self, input_data: dict):

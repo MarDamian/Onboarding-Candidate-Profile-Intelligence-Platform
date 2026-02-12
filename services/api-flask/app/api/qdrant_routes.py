@@ -5,12 +5,37 @@ from pipelines.etl.main import DB_URL, run_pipeline
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
+from app.services.etl_manager import ETLManager
 
 qdrant_bp = Blueprint('qdrant', __name__, url_prefix='/v1/admin/qdrant')
+etl_service = ETLManager()
 
 
 @qdrant_bp.route('/reindex', methods=['POST'])
 def reindex_all():
+    """
+    Encola un full_reindex asíncrono al worker Rust.
+    El worker: limpia Qdrant → resetea last_indexed_at → re-procesa todos los candidatos.
+    """
+    try:
+        result = etl_service.trigger_full_reindex(requested_by="flask:reindex")
+        
+        return jsonify({
+            'status': 'accepted', 
+            'message': 'Full reindex job queued for async processing by Rust worker',
+            'data': result
+        }), 202
+    except Exception as e:
+        return make_response(jsonify({
+            "error": f"Error queueing re-index: {str(e)}"
+        }), 500)
+
+
+@qdrant_bp.route('/reindex/sync', methods=['POST'])
+def reindex_all_sync():
+    """
+    Reindex síncrono (legacy/fallback) — ejecuta pipeline Python directamente.
+    """
     try:
         engine = create_engine(DB_URL)
         with engine.connect() as conn:
@@ -21,7 +46,7 @@ def reindex_all():
         
         return jsonify({
             'status': 'success', 
-            'message': 'Reindexing completed', 
+            'message': 'Reindexing completed (sync)', 
             'details': result
         }), 200
     except Exception as e:
@@ -80,6 +105,29 @@ def clear_collection():
 
 @qdrant_bp.route('/rebuild', methods=['POST'])
 def rebuild_collection():
+    """
+    Encola un full_reindex asíncrono al worker Rust.
+    El worker limpia Qdrant, resetea la BD y re-indexa todo.
+    """
+    try:
+        result = etl_service.trigger_full_reindex(requested_by="flask:rebuild")
+        
+        return jsonify({
+            "status": "accepted",
+            "message": "Rebuild job queued for async processing by Rust worker",
+            "data": result
+        }), 202
+    except Exception as e:
+        return make_response(jsonify({
+            "error": f"Error queueing rebuild: {str(e)}"
+        }), 500)
+
+
+@qdrant_bp.route('/rebuild/sync', methods=['POST'])
+def rebuild_collection_sync():
+    """
+    Rebuild síncrono (legacy/fallback).
+    """
     try:
         client = QdrantClient(url=settings.QDRANT_URL)
         
@@ -97,7 +145,7 @@ def rebuild_collection():
         
         return jsonify({
             "status": "success",
-            "message": "Colección reconstruida exitosamente",
+            "message": "Colección reconstruida exitosamente (sync)",
             "candidates_reindexed": records_processed
         }), 200
     except Exception as e:

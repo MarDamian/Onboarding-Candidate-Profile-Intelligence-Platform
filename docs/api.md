@@ -44,7 +44,7 @@ Recupera información detallada de un solo candidato mediante su ID.
   - **Código:** `404 Not Found` (El candidato no existe).
 
 #### 3. Crear Candidato
-Crea un nuevo perfil de candidato.
+Crea un nuevo perfil de candidato. La indexación en Qdrant se realiza automáticamente en segundo plano mediante el Worker Rust.
 
 - **URL:** `/candidate/`
 - **Método:** `POST`
@@ -57,7 +57,7 @@ Crea un nuevo perfil de candidato.
   - **Código:** `409 Conflict` (El correo electrónico o teléfono ya existen).
 
 #### 4. Actualizar Candidato
-Actualiza un perfil de candidato existente.
+Actualiza un perfil de candidato existente. El embedding en Qdrant se re-genera automáticamente en segundo plano.
 
 - **URL:** `/candidate/{id}`
 - **Método:** `PUT`
@@ -71,7 +71,7 @@ Actualiza un perfil de candidato existente.
   - **Código:** `422 Unprocessable Entity` (Error de validación).
 
 #### 5. Eliminar Candidato
-Elimina un perfil de candidato del sistema.
+Elimina un perfil de candidato del sistema. El vector asociado en Qdrant se elimina automáticamente en segundo plano.
 
 - **URL:** `/candidate/{id}`
 - **Método:** `DELETE`
@@ -257,10 +257,21 @@ Procesa candidatos pendientes de indexación en Qdrant de forma síncrona. Endpo
 
 **Nota:** Este endpoint ejecuta el ETL de forma síncrona bloqueando la respuesta. Se recomienda usar `/admin/etl/sync` para ejecuciones asíncronas.
 
-#### 4. Re-indexar Todos los Candidatos
-Fuerza la re-indexación completa de todos los candidatos en Qdrant.
+#### 4. Re-indexar Todos los Candidatos (Asíncrono)
+Encola un job de re-indexación completa al Worker Rust. El worker limpia Qdrant, resetea el estado de indexación y re-procesa todos los candidatos.
 
 - **URL:** `/admin/qdrant/reindex`
+- **Método:** `POST`
+- **Respuesta Exitosa:**
+  - **Código:** `202 Accepted`
+  - **Contenido:** Objeto con status, mensaje y datos del job encolado.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error encolando el job).
+
+#### 4b. Re-indexar Todos los Candidatos (Síncrono - Legacy)
+Ejecuta la re-indexación de forma síncrona. Fallback para compatibilidad.
+
+- **URL:** `/admin/qdrant/reindex/sync`
 - **Método:** `POST`
 - **Respuesta Exitosa:**
   - **Código:** `200 OK`
@@ -290,10 +301,21 @@ Elimina todos los puntos de la colección de candidatos en Qdrant.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error limpiando colección).
 
-#### 7. Reconstruir Colección desde Cero
-Reconstruye completamente la colección limpiando Qdrant y re-indexando todos los candidatos.
+#### 7. Reconstruir Colección desde Cero (Asíncrono)
+Encola un job de reconstrucción completa al Worker Rust. Limpia Qdrant y re-indexa todos los candidatos de forma asíncrona.
 
 - **URL:** `/admin/qdrant/rebuild`
+- **Método:** `POST`
+- **Respuesta Exitosa:**
+  - **Código:** `202 Accepted`
+  - **Contenido:** Objeto con status, mensaje y datos del job encolado.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error encolando el job).
+
+#### 7b. Reconstruir Colección desde Cero (Síncrono - Legacy)
+Reconstruye completamente la colección de forma síncrona. Fallback para compatibilidad.
+
+- **URL:** `/admin/qdrant/rebuild/sync`
 - **Método:** `POST`
 - **Respuesta Exitosa:**
   - **Código:** `200 OK`

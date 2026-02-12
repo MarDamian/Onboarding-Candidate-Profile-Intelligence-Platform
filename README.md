@@ -1,5 +1,17 @@
 # Candidate Profile Intelligence Platform
 
+![alt text](https://img.shields.io/badge/react-313131?style=flat&logo=react)
+![alt text](https://img.shields.io/badge/svelte-313131?style=flat&logo=svelte)
+![alt text](https://img.shields.io/badge/fastapi-313131?style=flat&logo=fastapi)
+![alt text](https://img.shields.io/badge/flask-313131?style=flat&logo=flask)
+![alt text](https://img.shields.io/badge/qdrant-313131?style=flat&logo=qdrant)
+![alt text](https://img.shields.io/badge/cohere-313131?style=flat&logo=cohere)
+![alt text](https://img.shields.io/badge/rust-313131?style=flat&logo=rust)
+![alt text](https://img.shields.io/badge/postgres-313131?style=flat&logo=postgresql)
+![alt text](https://img.shields.io/badge/redis-313131?style=flat&logo=redis)
+![alt text](https://img.shields.io/badge/postman-313131?style=flat&logo=postman)
+![alt text](https://img.shields.io/badge/Status-Finished-success)
+
 Plataforma de inteligencia para la gestión y análisis de perfiles de candidatos, diseñada para cubrir un flujo completo end-to-end: desde la creación y administración de datos hasta la búsqueda semántica y generación de insights mediante LLMs.
 
 El proyecto forma parte de un plan de onboarding técnico enfocado en la construcción progresiva de un sistema moderno, escalable y bien documentado.
@@ -15,215 +27,58 @@ Construir un sistema completamente funcional que permita:
 - Generar insights automáticos utilizando LLMs
 - Integrar un microfrontend especializado dentro de la aplicación principal
 
-## Estado actual
+## Checklist
 
-**Semana 1 – Día 1–2**
+**Backend CRUD**
+- [x] Modelo de dominio definido
+- [x] CRUD completo en FastAPI
+- [x] Validaciones con Pydantic
+- [x] Manejo estándar de errores 
+- [x] OpenAPI documentado
 
-Actualmente el proyecto se encuentra en una fase inicial e incluye:
+**Frontend React**
+- [x] Listado de entidades
+- [x] Creación, edición y eliminación
+- [x] Manejo de errores
+- [x] Variables de entorno
 
-- Configuración del repositorio y estructura base
-- Infraestructura levantada mediante Docker Compose
-- Servicios base disponibles:
-  - PostgreSQL
-  - Redis
-  - Qdrant
-- Documentación inicial del proyecto
+**ETL**
+- [x] Idempotencia
+- [x] Validaciones
+- [x] Tracking de ejecuciones
+- [x] Endpoint administrativo
 
-Las funcionalidades de negocio (CRUD, ETL, búsqueda semántica, LLM) se implementarán progresivamente en las siguientes fases.
+**Qdrant**
+- [x] Colección documentada
+- [x] Definición de payloads
+- [x] Operaciones de upsert
+- [x] Reindexación soportada
 
-**Semana 1 – Día 3–4**
+**LLM Avanzado**
+- [x] Prompts versionados
+- [x] Tool calling implementado
+- [x] Prompt compression aplicada
+- [x] Guardrails (tokens y timeouts)
+- [x] Fallback seguro
 
-Ya con las bases establecidas, se procede a la implementación de los servicios principales:
+**Microfrontend (Svelte)**
+- [x] Aplicación Svelte creada
+- [x] Funcionalidad clara y aislada
+- [x] Integración con React
+- [x] Build y despliegue mediante Docker
 
-- Implementación de fastapi con CRUD completo de candidatos
-- Refactorización del servicio **FastAPI** hacia una estructura anidada (`app/`)
-  - Separación clara de `api`, `core`, `db`, `schemas` y `models`
-- Implementacion de Validaciones en schemas y models
-- Rutas de GET POST PUT DELETE para la gestion de candidatos
-- Documentacion de rutas openapi
-- Documentación del flujo de migraciones en el onboarding
-- Ajustes de configuración:
-  - Variables de entorno
-  - Carga de settings
-  - Reglas de ignore actualizadas
-- Integracion a a Docker
-  - Dockerfile.fastapi
-  - docker-compose.yml(api-fastapi service)
-- Especificacion de variables de entorno y requirements.txt
+**Infraestructura y Calidad**
+- [x] Docker Compose
+- [x] Logs estructurados
+- [x] Pruebas mínimas
+- [x] CI activo
 
-Las funcionalidades de negocio (ETL, búsqueda semántica, LLM) se implementarán progresivamente en las siguientes fases.
-
-**Semana 1 – Día 5**
-
-Durante este día se implementa:
-
-- Inicialización de **Alembic** para manejo de migraciones
-  - Configuración de conexión a base de datos
-  - Definición de `Base` unificada
-  - Creación de migraciones iniciales
-- Manejo de estados de la aplicación:
-  - Estados de carga
-  - Manejo centralizado de errores
-- Mejora de experiencia de usuario:
-  - Formularios con `react-hook-form`
-  - Validaciones en frontend
-  - Componentes reutilizables
-- Dockerización de la aplicación React
-  - Integración del frontend dentro de la orquestación existente
-  - Configuración de variables de entorno
-- Ajustes de CORS en FastAPI para permitir comunicación UI ↔ API
-- Actualización de documentación técnica y arquitectónica
-
-**Cierre Semana 1:**
-
-- Implementación exitosa de **Alembic**.
-- CRUD funcional y verificado con datos semilla automatizados.
-- Documentación de arquitectura de persistencia completada.
-
-**Semana 2 - Día 6-7**
-
-- Implementación pipeline del ETL
-  - ETL idempotente (usando `last_indexed_at`) mediante migración con alembic
-  - ETL con Redis y PostgreSQL
-- Endpoint administrativo en Flask y Dockerización del servicio Flask
-- Ajustes de CORS en Flask para permitir comunicación UI ↔ API
-- Actualización de documentación técnica y arquitectónica
-
-**Semana 2 - Día 8**
-
-- **Implementación de embeddings reales con sentence-transformers**
-  - Servicio de embeddings centralizado (`pipelines/utils/embeddings_service.py`)
-  - Modelo `all-MiniLM-L6-v2` optimizado para CPU (384 dimensiones)
-  - Integración con el pipeline ETL para generación automática de vectores
-- **Colección de Qdrant completamente documentada**
-  - Estructura de vectores y payload
-  - Proceso de indexación incremental
-  - Documentación de mantenimiento y troubleshooting
-- **Búsqueda semántica funcional en Flask**
-  - Endpoint `/v1/search/` con búsqueda por texto en lenguaje natural
-  - Filtros por skills y nombre del candidato
-  - Score threshold configurable
-  - Endpoint `/v1/search/similar/{id}` para encontrar candidatos similares
-- **Separación de responsabilidades**
-  - FastAPI dedicado exclusivamente a CRUD de candidatos
-  - Flask con ETL y búsqueda semántica
-  - Eliminación de redundancia de torch en FastAPI
-- **Optimizaciones de infraestructura**
-  - Actualización de Dockerfiles y docker-compose
-  - Volúmenes compartidos para pipelines entre servicios
-  - Variables de entorno para Qdrant configuradas
-- Actualización completa de documentación de API y arquitectura
-
-**Semana 2 - Día 9-10 LLM (Nivel Avanzado)**
-
-- **LLM orchestration**
-  - `PromptManager`: Carga y caching de prompts con versionado (v1, v2)
-  - `ContextManager`: Compresión inteligente de contexto
-  - `ErrorHandler`: Manejo centralizado de errores y fallbacks
-  - `Agent`: Orquestador principal completa
-- **Insights**
-  - Generación de resúmenes técnicos detallados (`generate_summary`)
-  - Scoring de compatibilidad candidato-vacante (`generate_score`)
-  - Análisis comparativo y posicionamiento en mercado (`generate_comparison`)
-  - Métodos auxiliares para extracción de datos (años exp, skills, percentiles)
-- **Schemas de Validación Pydantic**
-  - `InsightResponse`: respuesta unificada para todos los endpoints
-- **Endpoints REST Insights**
-  - `GET /v1/insights/{candidate_id}` - Insights generales con comparación opcional
-- **Prompts Versionados Avanzados**
-  - `prompts/candidate_summary/v1.txt` - Prompt base refinado
-  - `prompts/candidate_summary/v2.txt` - Prompt avanzado con análisis estratégico profundo
-  - `prompts/skill_extraction/v1.txt` - Extracción estructurada de skills (JSON)
-- **Integración Cohere LLM**
-  - Decisión por `command-a-03-2025` para superior reasoning
-  - Decisión por `embed-multilingual-light-v3.0` para embeddings multilingües
-  - ADR 005 documentando todas las decisiones arquitectónicas
-  - Migración planeada de embeddings locales a API Cohere (4 fases)
-- **Documentación Arquitectónica Completa**
-  - ADR 005: Decisiones sobre LLM y Embeddings API
-  - Actualización de `docs/api.md`
-
-**Semana 2 - Día 11-12 React UI Insights**
-
-- **Componentes React para Insights**
-  - `Insight.tsx` - Visualización de resumen técnico
-  - `Card.tsx` - Componente Card para uso
-- **Integración Frontend-Backend**
-  - Servicio `InsightService.ts` - Cliente TypeScript para endpoints
-  - Estados de carga, error y éxito
-  - Refresh automático
-- **UI/UX Mejorada**
-  - navbar mejorado y estilizado, se agrego buscador para la lista
-
-**Semana 3 - Día 13-14 Worker Rust**
-
-- **Worker Rust - Procesamiento Asíncrono de Jobs**
-  - Arquitectura modular con separación de responsabilidades
-  - Consumo de jobs desde Redis con `BLPOP` bloqueante
-  - Módulos especializados:
-    - `config.rs`: Gestión de configuración desde variables de entorno
-    - `queue.rs`: Abstracción de operaciones con Redis
-    - `jobs/types.rs`: Definición de tipos de jobs y payloads
-    - `jobs/processor.rs`: Procesador principal con lógica por tipo de job
-  - Integración con Flask API para encolado asíncrono
-  - Logging detallado con tracing
-  - Manejo robusto de errores
-- **Flask API - Encolado Asíncrono**
-  - Refactor de `ETLManager` para enviar jobs a Redis
-  - Nuevo endpoint `/v1/admin/etl/sync` retorna 202 Accepted
-  - Endpoint legacy `/v1/admin/etl/sync/direct` para ejecución síncrona
-  - Payloads JSON compatibles con Worker Rust
-
-**Semana 3 - Día 15-16 Worker Rust - Implementación Completa**
-
-- **Worker Rust - Procesamiento Batch ETL y Embeddings**
-  - Integración con servicios externos:
-    - Cliente PostgreSQL con sqlx
-    - Cliente Cohere API para embeddings (`embed-multilingual-v3.0`)
-    - Cliente Qdrant para indexación vectorial
-  - Arquitectura de módulos completada:
-    - `jobs/etl.rs`: Lógica completa del pipeline ETL
-    - `jobs/processor.rs`: Integración con todos los servicios
-  - Soporte para embeddings configurables:
-    - Dimensión, modelo y distancia via variables de entorno
-  - Manejo robusto de errores y logging detallado
-
-**Semana 3 - Día 17 - Microfrontend Svelte**
-
--   **Microfrontend de Candidatos Similares**
-    -   Implementación en Svelte (`ui/svelte-mf`) usando Vite
-    -   Componente `SimilarCandidates.svelte` para visualizar perfiles relacionados
-    -   Comunicación con API Backend (`/v1/semantic_search/similar/{id}`)
-    -   Modo "Embebido" para integración limpia sin headers/controls
--   **Integración en React**
-    -   Uso de **Iframe** para aislar el microfrontend
-    -   Comunicación unidireccional vía URL parameters (`?candidateId=...`)
-    -   Componente wrapper `SimilarProfiles.tsx` en React
-    -   Despliegue integrado en la vista de detalle de candidato
-
-**Semana 3 - Día 18 - Pruebas Automatizadas y CI**
-
-- **Suite completa de pruebas automatizadas**
-  - FastAPI: (endpoints CRUD, schemas Pydantic, compresión de contexto, prompt loader, búsqueda semántica, insights LLM)
-  - Flask: (rutas ETL, rutas Qdrant, ETL manager)
-  - React: (servicios API, tipos TypeScript, routing)
-  - Pipelines ETL: (extract, transform, load, embeddings service)
-- **CI/CD con GitHub Actions**
-  - Workflow `.github/workflows/ci.yml`
-  - Jobs: test-fastapi, test-flask, test-pipelines, test-react, check-rust, docker-build
-  - Cache de dependencias (pip, npm, cargo) para builds rápidos
-- **Bug fix en producción detectado por tests**
-  - `search.py`: `except Exception` capturaba `HTTPException(404)` y la re-lanzaba como 500
-  - Fix: `except HTTPException: raise` antes del handler genérico
-- **Integración con Docker**
-  - Servicios de test con profiles en docker-compose
-  - Ejecución via `docker exec` en contenedores activos
-  - Dockerfile.pipelines para tests aislados de ETL
-
-**Pendiente:**
-
-- Día 16 - Logs estructurados - Timeouts y reintentos
-- Día 17 - Documentación final - Demo completa
+**Documentación**
+- [x] README (por terminar)
+- [x] Arquitectura
+- [x] API
+- [x] Runbook
+- [x] ADRs
 
 ## Features (objetivo final)
 
@@ -336,32 +191,6 @@ Durante este día se implementa:
 | Redis       | 6379   | Cache y cola de jobs                          |
 | Qdrant      | 6333   | Motor de búsqueda vectorial                   |
 
-## Endpoints principales
-
-### FastAPI (Puerto 8000)
-
-- `GET /v1/candidates/` - Listar candidatos
-- `POST /v1/candidates/` - Crear candidato
-- `GET /v1/candidates/{candidate_id}` - Obtener candidato
-- `PUT /v1/candidates/{candidate_id}` - Actualizar candidato
-- `DELETE /v1/candidates/{candidate_id}` - Eliminar candidato
-- `GET /docs` - Documentación Swagger/OpenAPI
-- `POST /v1/semantic_search/` - Busqueda semantica para encontrar candidatos
-- `GET /v1/semantic_search/similar/{candidate_id}` - Busqueda por similitud de varios candidatos del candidato elegido
-- `GET /v1/insights/{candidate_id}` - Insights generales del candidato
-- `POST /v1/insights/score` - Scoring de compatibilidad candidato-vacante
-- `POST /v1/insights/summary` - Resumen técnico comprensivo
-- `GET /v1/insights/{candidate_id}/comparison` - Análisis comparativo vs mercado
-- `GET /v1/insights/health` - Estado del servicio de insights
-
-### Flask (Puerto 5000)
-
-- `POST /v1/admin/etl/sync` - Encolar job ETL asíncrono (retorna job_id)
-- `GET /v1/admin/etl/status/<job_id>` - Consultar estado de job ETL
-- `POST /v1/admin/etl/sync/direct` - Ejecutar ETL síncrono (legacy)
-- `POST /v1/admin/qdrant/reindex` - Re-indexar todos los candidatos
-- `GET /v1/admin/qdrant/stats` - Estadísticas de Qdrant
-
 ## Estructura del proyecto
 
 ```text
@@ -377,6 +206,9 @@ infra/
 ├── Dockerfile.fastapi             # Imagen para FastAPI
 ├── Dockerfile.flask               # Imagen para Flask
 ├── Dockerfile.react               # Imagen para React
+├── Dockerfile.worker_rust         # Imagen para Worker Rust
+├── Dockerfile.svelte              # Imagen para Svelte
+├── Dockerfile.pipeline            # Imagen para Pipeline
 └── db/
     └── init.sql                   # Script de inicialización de DB
 
@@ -391,6 +223,7 @@ services/
 │   │   ├── api/v1/                # Endpoints versioned
 │   │   ├── core/                  # Configuración
 │   │   ├── db/                    # Modelos y conexión
+│   │   │   └── models/            # Modelos de base de datos
 │   │   ├── schemas/               # Validación con Pydantic
 │   │   └──  llm/
 │   ├── tests/                     # tests (pytest)
@@ -428,6 +261,9 @@ ui/
     ├── src/
     │   ├── assets/
     │   ├── lib/
+    │   │     ├── components/
+    │   │     └── services/
+    │   └── routes/
     ├── package.json
     └── vite.config.ts
 
@@ -455,24 +291,6 @@ prompts/
   - **ADR 003**: Refactor de búsqueda semántica
   - **ADR 002**: Migraciones de base de datos
   - **ADR 001**: Manejo descentralizado de errores
-
-## Próximos pasos
-
-Para continuar con el desarrollo del proyecto:
-
-1. **Optimizaciones de Performance**
-   - Implementación de caching con Redis
-   - Rate limiting y quota management
-   - Optimización de queries a PostgreSQL
-
-2. **Monitoreo y Observabilidad**
-   - Dashboards Grafana para métricas de insights
-   - Alertas para latencia y costo de tokens
-   - Logging centralizado con ELK
-
-3. **Optimizaciones de Cohere API**
-   - Fine-tuning de prompts con feedback
-   - A/B testing de modelos y temperaturas
 
 ## Contribuciones
 

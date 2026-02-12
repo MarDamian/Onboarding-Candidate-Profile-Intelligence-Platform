@@ -6,6 +6,29 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from app.db.database import SessionLocal
 from app.db.models.candidate import Candidate
 
+
+def _enqueue_initial_index():
+    """Encola un etl_sync al worker Rust para indexar los seeds automáticamente."""
+    try:
+        import json
+        import redis
+        from datetime import datetime, timezone
+        
+        redis_url = os.getenv("REDIS_URL")
+        queue_name = os.getenv("REDIS_QUEUE")
+        
+        client = redis.from_url(redis_url, decode_responses=True, socket_connect_timeout=5)
+        payload = {
+            "job_type": "etl_sync",
+            "requested_by": "seed_db:startup",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        client.rpush(queue_name, json.dumps(payload))
+        print("ETL sync job encolado — el worker Rust indexará los seeds automáticamente")
+    except Exception as e:
+        print(f"Advertencia: no se pudo encolar el index inicial: {e}")
+        print("Ejecuta manualmente POST /v1/admin/etl/sync para indexar")
+
 def seed():
     """
     Inserta datos de prueba en la base de datos.
@@ -86,12 +109,17 @@ def seed():
         )
     ]
     try:
+        seeded = False
         for c in candidates:
             exists = db.query(Candidate).filter(Candidate.email == c.email).first()
             if not exists:
                 db.add(c)
+                seeded = True
         db.commit()
         print("Seeds insertados con éxito")
+        
+        if seeded:
+            _enqueue_initial_index()
     except Exception as e:
         print(f"Error al insertar seeds: {e}")
         db.rollback()

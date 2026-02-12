@@ -24,5 +24,14 @@ class Settings(BaseSettings):
     # Base de datos
     DATABASE_URL: str = os.getenv("DATABASE_URL")
     QDRANT_URL: str = os.getenv("QDRANT_URL")
+    
+    # Redis (para encolar jobs al worker Rust)
+    REDIS_URL: str = os.getenv("REDIS_URL")
+    REDIS_QUEUE: str = os.getenv("REDIS_QUEUE")
+
+    # Fallback LLM (OpenAI u otro)
+    FALLBACK_MODEL_NAME: str = os.getenv("FALLBACK_MODEL_NAME")
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY")
+
 
 settings = Settings()

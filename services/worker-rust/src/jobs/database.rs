@@ -94,4 +94,51 @@ impl DatabaseService {
         info!("Marked {} candidates as indexed", candidate_ids.len());
         Ok(())
     }
+
+    /// Obtiene un candidato específico por ID
+    pub async fn get_candidate_by_id(&self, candidate_id: i32) -> Result<Option<Candidate>> {
+        let query = "
+            SELECT id, 
+                   COALESCE(name, '') as name, 
+                   COALESCE(summary, '') as summary, 
+                   COALESCE(skills, '') as skills, 
+                   COALESCE(experience, '') as experience, 
+                   COALESCE(updated_at::text, '') as updated_at
+            FROM candidates
+            WHERE id = $1
+        ";
+
+        let rows = timeout(
+            Duration::from_secs(10),
+            self.client.query(query, &[&candidate_id])
+        )
+        .await
+        .context("Query for candidate by ID timed out")?
+        .context("Failed to query candidate by ID")?;
+
+        Ok(rows.first().map(|row| Candidate {
+            id: row.get(0),
+            name: row.get(1),
+            summary: row.get(2),
+            skills: row.get(3),
+            experience: row.get(4),
+            updated_at: row.get(5),
+        }))
+    }
+
+    /// Resetea last_indexed_at para todos los candidatos (full reindex)
+    pub async fn reset_all_indexed(&self) -> Result<u64> {
+        let query = "UPDATE candidates SET last_indexed_at = NULL";
+        
+        let rows_affected = timeout(
+            Duration::from_secs(10),
+            self.client.execute(query, &[])
+        )
+        .await
+        .context("Resetting last_indexed_at timed out")?
+        .context("Failed to reset last_indexed_at")?;
+
+        info!("Reset last_indexed_at for {} candidates", rows_affected);
+        Ok(rows_affected)
+    }
 }

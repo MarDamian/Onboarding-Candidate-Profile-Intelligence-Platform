@@ -60,10 +60,11 @@ Esto levantará los siguientes servicios en segundo plano:
 **Configuración automática:**
 Al iniciar, FastAPI ejecuta automáticamente:
 1. `alembic upgrade head` - Aplica todas las migraciones pendientes
-2. `python scripts/seed_db.py` - Inserta candidatos de prueba
+2. `python scripts/seed_db.py` - Inserta candidatos de prueba y encola un job `etl_sync` a Redis
 3. `uvicorn app.main:app` - Inicia el servidor
 
 Esto garantiza que la base de datos esté siempre actualizada y con datos de prueba disponibles.
+El Worker Rust procesará el job encolado automáticamente, indexando los seeds en Qdrant sin intervención manual.
 
 ### 4. Verificar servicios
 Una vez levantados los contenedores, verifica que los servicios estén respondiendo:
@@ -150,7 +151,9 @@ git checkout -b feature/{feature-name}
 - No ejecutar Alembic fuera de Docker
 - Todas las modificaciones de modelos deben incluir migración
 - Las migraciones y seeds se ejecutan automáticamente en `docker compose up`
-- Para re-indexar Qdrant manualmente: `POST http://localhost:5000/v1/admin/qdrant/reindex`
+- La indexación en Qdrant es automática: los candidatos se indexan al crear/actualizar y se eliminan de Qdrant al borrar
+- Para forzar un re-index completo asíncrono: `POST http://localhost:5000/v1/admin/qdrant/reindex` (202 Accepted, procesado por Worker Rust)
+- Para re-index síncrono legacy: `POST http://localhost:5000/v1/admin/qdrant/reindex/sync`
 - Configuración de embeddings se gestiona en `.env`
-- Los jobs ETL se procesan de forma asíncrona: Flask encola → Redis → Worker Rust procesa
+- Los jobs ETL se procesan de forma asíncrona: Flask/FastAPI encolan → Redis → Worker Rust procesa
 - Para ejecución síncrona legacy usa: `POST http://localhost:5000/v1/admin/etl/sync/direct`

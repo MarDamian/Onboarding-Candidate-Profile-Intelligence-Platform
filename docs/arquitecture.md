@@ -35,6 +35,7 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
   - API pública del sistema
   - Exposición de endpoints CRUD para la entidad principal (Candidate)
   - **Búsqueda semántica** con embeddings y filtros avanzados
+  - **Indexación automática**: cada operación CRUD (crear, actualizar, eliminar) encola un job a Redis para que el Worker Rust actualice Qdrant automáticamente
   - Validaciones y documentación OpenAPI
 
 - **Flask (Administración)**
@@ -44,13 +45,18 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
   - Endpoints admin bajo `/v1/admin/etl` y `/v1/admin/qdrant`
   - No expuesta directamente al usuario final
   - Envío de jobs a Redis para procesamiento asíncrono
+  - Los endpoints `/reindex` y `/rebuild` ahora son asíncronos (202 Accepted) delegando al Worker Rust
+  - Se mantienen variantes `/sync` como fallback legacy
 
 - **Worker Rust**
   - Procesador asíncrono de jobs desde Redis (`jobs:etl`)
   - **Consumo eficiente** de jobs con `BLPOP` (bloqueante, sin polling)
   - **Tipos de jobs soportados**:
-    - `etl_sync`: Procesamiento batch de ETL completo
+    - `etl_sync`: Procesamiento batch de ETL completo (candidatos stale)
     - `embedding_batch`: Generación de embeddings por lotes específicos
+    - `single_index`: Indexación de un candidato individual (disparado automáticamente en create/update)
+    - `delete_point`: Eliminación de vector de Qdrant (disparado automáticamente en delete)
+    - `full_reindex`: Limpieza completa de Qdrant + reset de BD + re-indexación de todos los candidatos
   - **Integración con servicios externos**:
     - PostgreSQL (sqlx) para extracción y actualización de candidatos
     - Cohere API para generación de embeddings
@@ -129,7 +135,7 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 - **Node**: `node:22-alpine` (React y Svelte)
 
 ### Startup Automático
-- **FastAPI**: Ejecuta migraciones → seed → servidor
+- **FastAPI**: Ejecuta migraciones → seed → encola indexación inicial → servidor
 - **Flask**: Workers con timeout extendido para procesos ETL de larga duración
 - **React**: Ejecuta servidor de desarrollo
 - **Svelte**: Ejecuta servidor de desarrollo

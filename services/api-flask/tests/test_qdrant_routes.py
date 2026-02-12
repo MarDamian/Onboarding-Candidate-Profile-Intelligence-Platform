@@ -54,30 +54,27 @@ class TestQdrantStats:
 
 
 class TestQdrantReindex:
-    """Tests para POST /v1/admin/qdrant/reindex"""
+    """Tests para POST /v1/admin/qdrant/reindex (asíncrono via Worker Rust)"""
 
-    @patch("app.api.qdrant_routes.run_pipeline")
-    @patch("app.api.qdrant_routes.create_engine")
-    def test_reindex_success(self, mock_engine, mock_pipeline, client):
-        """Debe resetear last_indexed_at y re-ejecutar pipeline."""
-        mock_conn = MagicMock()
-        mock_engine.return_value.connect.return_value.__enter__ = lambda s: mock_conn
-        mock_engine.return_value.connect.return_value.__exit__ = MagicMock(return_value=False)
-        mock_pipeline.return_value = {"status": "success", "processed": 10}
+    @patch("app.api.qdrant_routes.etl_service")
+    def test_reindex_success(self, mock_etl_service, client):
+        """Debe encolar un full_reindex y retornar 202 Accepted."""
+        mock_etl_service.trigger_full_reindex.return_value = {
+            "status": "job_queued",
+            "queue": "jobs:etl",
+            "job_payload": {"job_type": "full_reindex"}
+        }
 
         response = client.post("/v1/admin/qdrant/reindex")
-        assert response.status_code == 200
+        assert response.status_code == 202
         data = response.get_json()
-        assert data["status"] == "success"
+        assert data["status"] == "accepted"
+        mock_etl_service.trigger_full_reindex.assert_called_once_with(requested_by="flask:reindex")
 
-    @patch("app.api.qdrant_routes.run_pipeline")
-    @patch("app.api.qdrant_routes.create_engine")
-    def test_reindex_pipeline_error(self, mock_engine, mock_pipeline, client):
-        """Debe retornar 500 cuando el pipeline falla."""
-        mock_conn = MagicMock()
-        mock_engine.return_value.connect.return_value.__enter__ = lambda s: mock_conn
-        mock_engine.return_value.connect.return_value.__exit__ = MagicMock(return_value=False)
-        mock_pipeline.side_effect = Exception("Cohere API error")
+    @patch("app.api.qdrant_routes.etl_service")
+    def test_reindex_pipeline_error(self, mock_etl_service, client):
+        """Debe retornar 500 cuando el encolamiento falla."""
+        mock_etl_service.trigger_full_reindex.side_effect = Exception("Redis connection error")
 
         response = client.post("/v1/admin/qdrant/reindex")
         assert response.status_code == 500
@@ -109,39 +106,27 @@ class TestQdrantClear:
 
 
 class TestQdrantRebuild:
-    """Tests para POST /v1/admin/qdrant/rebuild"""
+    """Tests para POST /v1/admin/qdrant/rebuild (asíncrono via Worker Rust)"""
 
-    @patch("app.api.qdrant_routes.run_pipeline")
-    @patch("app.api.qdrant_routes.create_engine")
-    @patch("app.api.qdrant_routes.QdrantClient")
-    def test_rebuild_success(self, mock_qdrant_cls, mock_engine, mock_pipeline, client):
-        """Debe limpiar y reconstruir la colección completa."""
-        mock_client = MagicMock()
-        mock_qdrant_cls.return_value = mock_client
-
-        mock_conn = MagicMock()
-        mock_engine.return_value.connect.return_value.__enter__ = lambda s: mock_conn
-        mock_engine.return_value.connect.return_value.__exit__ = MagicMock(return_value=False)
-        mock_pipeline.return_value = 25
+    @patch("app.api.qdrant_routes.etl_service")
+    def test_rebuild_success(self, mock_etl_service, client):
+        """Debe encolar un full_reindex y retornar 202 Accepted."""
+        mock_etl_service.trigger_full_reindex.return_value = {
+            "status": "job_queued",
+            "queue": "jobs:etl",
+            "job_payload": {"job_type": "full_reindex"}
+        }
 
         response = client.post("/v1/admin/qdrant/rebuild")
-        assert response.status_code == 200
+        assert response.status_code == 202
         data = response.get_json()
-        assert data["status"] == "success"
-        assert data["candidates_reindexed"] == 25
+        assert data["status"] == "accepted"
+        mock_etl_service.trigger_full_reindex.assert_called_once_with(requested_by="flask:rebuild")
 
-    @patch("app.api.qdrant_routes.run_pipeline")
-    @patch("app.api.qdrant_routes.create_engine")
-    @patch("app.api.qdrant_routes.QdrantClient")
-    def test_rebuild_error(self, mock_qdrant_cls, mock_engine, mock_pipeline, client):
-        """Debe retornar 500 cuando la reconstrucción falla."""
-        mock_client = MagicMock()
-        mock_qdrant_cls.return_value = mock_client
-
-        mock_conn = MagicMock()
-        mock_engine.return_value.connect.return_value.__enter__ = lambda s: mock_conn
-        mock_engine.return_value.connect.return_value.__exit__ = MagicMock(return_value=False)
-        mock_pipeline.side_effect = Exception("Qdrant unreachable")
+    @patch("app.api.qdrant_routes.etl_service")
+    def test_rebuild_error(self, mock_etl_service, client):
+        """Debe retornar 500 cuando el encolamiento falla."""
+        mock_etl_service.trigger_full_reindex.side_effect = Exception("Redis unreachable")
 
         response = client.post("/v1/admin/qdrant/rebuild")
         assert response.status_code == 500

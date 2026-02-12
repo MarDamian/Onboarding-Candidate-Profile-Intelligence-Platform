@@ -2,8 +2,8 @@ use anyhow::{Context, Result};
 use qdrant_client::{
     client::QdrantClient,
     qdrant::{
-        vectors_config::Config, CreateCollection, Distance, PointStruct,
-        VectorParams, VectorsConfig,
+        vectors_config::Config, CreateCollection, Distance, Filter, PointStruct,
+        PointsSelector, VectorParams, VectorsConfig,
     },
 };
 use serde_json::Map;
@@ -118,6 +118,63 @@ impl QdrantService {
             .context("Failed to upsert points to Qdrant")?;
 
         info!("Upserted {} points to Qdrant", count);
+        Ok(())
+    }
+
+    /// Elimina un punto de la colección por ID de candidato
+    pub async fn delete_point(&self, candidate_id: i32) -> Result<()> {
+        let points_selector = PointsSelector {
+            points_selector_one_of: Some(
+                qdrant_client::qdrant::points_selector::PointsSelectorOneOf::Points(
+                    qdrant_client::qdrant::PointsIdsList {
+                        ids: vec![(candidate_id as u64).into()],
+                    },
+                ),
+            ),
+        };
+
+        self.client
+            .delete_points_blocking(&self.collection_name, None, &points_selector, None)
+            .await
+            .context("Failed to delete point from Qdrant")?;
+
+        info!("Deleted point {} from Qdrant", candidate_id);
+        Ok(())
+    }
+
+    /// Elimina todos los puntos de la colección (para full reindex)
+    pub async fn clear_all_points(&self) -> Result<()> {
+        let collections = self
+            .client
+            .list_collections()
+            .await
+            .context("Failed to list Qdrant collections")?;
+
+        let exists = collections
+            .collections
+            .iter()
+            .any(|c| c.name == self.collection_name);
+
+        if exists {
+            self.client
+                .delete_points_blocking(
+                    &self.collection_name,
+                    None,
+                    &PointsSelector {
+                        points_selector_one_of: Some(
+                            qdrant_client::qdrant::points_selector::PointsSelectorOneOf::Filter(
+                                Filter::default(),
+                            ),
+                        ),
+                    },
+                    None,
+                )
+                .await
+                .context("Failed to clear all points from Qdrant")?;
+
+            info!("Cleared all points from collection: {}", self.collection_name);
+        }
+
         Ok(())
     }
 }
