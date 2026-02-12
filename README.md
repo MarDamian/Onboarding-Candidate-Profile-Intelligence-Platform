@@ -59,7 +59,7 @@ Construir un sistema completamente funcional que permita:
 - [x] Tool calling implementado
 - [x] Prompt compression aplicada
 - [x] Guardrails (tokens y timeouts)
-- [ ] Fallback seguro (verificar)
+- [x] Fallback seguro
 
 **Microfrontend (Svelte)**
 - [x] Aplicación Svelte creada
