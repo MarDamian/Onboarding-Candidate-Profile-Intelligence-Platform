@@ -13,7 +13,9 @@ router = APIRouter(prefix="/candidate", tags=["Candidate"])
     responses={
         200: {"description": "List of candidates"},
         422: {"description": "Invalid query parameters"}
-    }
+    },
+    summary="Lista de candidatos",
+    description="Lista de todos los candidatos"
 )
 def list_candidates(db: Session = Depends(get_db)):
     candidates = db.query(Candidate).all()
@@ -27,7 +29,9 @@ def list_candidates(db: Session = Depends(get_db)):
         200: {"description": "Candidate found"},
         404: {"description": "Candidate not found"},
         422: {"description": "Invalid query parameters"}
-    }
+    },
+    summary="Candidato por ID",
+    description="Obtiene un candidato filtrando por el id del candidato"
 )
 def get_candidate(candidate_id: int, db: Session = Depends(get_db)):
     candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
@@ -44,7 +48,9 @@ def get_candidate(candidate_id: int, db: Session = Depends(get_db)):
         400: {"description": "Invalid input"},
         409: {"description": "Email already exists"},
         422: {"description": "Validation error"},
-    }
+    },
+    summary="Crear un nuevo candidato",
+    description="Crea un nuevo candidato con sus respectivos datos"
 )
 def create_candidate(candidate: CandidateCreate, db: Session = Depends(get_db)):
     new_candidate = Candidate(**candidate.model_dump())
@@ -61,7 +67,9 @@ def create_candidate(candidate: CandidateCreate, db: Session = Depends(get_db)):
         404: {"description": "Candidate not found"},
         409: {"description": "Email already exists"},
         422: {"description": "Validation error"}
-    }
+    },
+    summary="Actualizar un candidato",
+    description="Actualiza un candidato filtrando por el id del candidato"
 )
 def update_candidate(candidate_id: int, candidate: CandidateUpdate, db: Session = Depends(get_db)):
     update_candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
@@ -110,7 +118,9 @@ def update_candidate(candidate_id: int, candidate: CandidateUpdate, db: Session 
     responses={
         200: {"description": "Candidate deleted successfully"},
         404: {"description": "Candidate not found"}
-    }
+    },
+    summary="Eliminar un candidato",
+    description="Elimina un candidato filtrando por el id del candidato"
 )
 def delete_candidate(candidate_id: int, db: Session = Depends(get_db)):
     candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
