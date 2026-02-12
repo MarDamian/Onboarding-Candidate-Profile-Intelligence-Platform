@@ -8,3 +8,8 @@ class SearchRequest(BaseModel):
     score_threshold: float = Field(default=0.2, ge=0.0, le=1.0, description="Umbral mínimo de similitud")
     skills_filter: Optional[list[str]] = Field(default=None, description="Filtrar por skills específicas")
     name_filter: Optional[str] = Field(default=None, description="Filtrar por nombre del candidato")
+
+class SearchResponse(BaseModel):
+    query: str
+    total_results: int
+    results: list[dict]
