@@ -1,5 +1,8 @@
 from pipelines.utils.embeddings_service import EmbeddingsService
+from app.schemas.candidate import CandidateRead
+import logging
 
+logger = logging.getLogger(__name__)
 
 class Transformer:
     def __init__(self):
@@ -9,25 +12,32 @@ class Transformer:
         """
         self.embeddings_service = EmbeddingsService()
     
-    def prepare_vector(self, candidate):
-        """Concatena los datos para dar contexto al vector y genera embedding real.
+    def prepare_vector(self, candidate_row):
+        """Valida y concatena los datos para generar el embedding.
 
         Args:
-            candidate (Candidate): El candidate actual.
+            candidate_row: Fila de la base de datos (SQLAlchemy Row).
 
         Returns:
-            dict: Información de embeddings y data del candidate actual.
+            dict: Información de embeddings y data del candidate actual, o None si falla la validación.
         """
-        context_text = f"{candidate.name} | {candidate.summary} | Skills: {candidate.skills} | Experience: {candidate.experience}"
-        
-        vector = self.embeddings_service.generate_embedding(context_text, input_type="search_document")
-        
-        return {
-            "id": candidate.id,
-            "vector": vector,
-            "payload": {
-                "name": candidate.name,
-                "text_content": context_text,
-                "update_at": str(candidate.updated_at)
+        try:
+            # Validar usando el esquema de Pydantic
+            candidate = CandidateRead.model_validate(candidate_row)
+            
+            context_text = f"{candidate.name} | {candidate.summary} | Skills: {candidate.skills} | Experience: {candidate.experience}"
+            
+            vector = self.embeddings_service.generate_embedding(context_text, input_type="search_document")
+            
+            return {
+                "id": candidate.id,
+                "vector": vector,
+                "payload": {
+                    "name": candidate.name,
+                    "text_content": context_text,
+                    "update_at": str(candidate.updated_at)
+                }
             }
-        }
+        except Exception as e:
+            logger.error(f"Error validando/transformando candidato {getattr(candidate_row, 'id', 'unknown')}: {e}")
+            return None

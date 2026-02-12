@@ -45,7 +45,14 @@ def run_pipeline():
         r.set(status_key, json.dumps({"status": "transforming", "count": len(raw_data)}))
         processed_data = [transformer.prepare_vector(c) for c in raw_data]
 
+        processed_data = [p for p in processed_data if p is not None]
+
+        if not processed_data:
+            r.set(status_key, json.dumps({"status": "success", "message": "No valid data to process"}))
+            return 0
+
         r.set(status_key, json.dumps({"status": "loading", "count": len(processed_data)}))
+
         loader.load_points(processed_data)
 
         candidate_ids = [p['id'] for p in processed_data]
