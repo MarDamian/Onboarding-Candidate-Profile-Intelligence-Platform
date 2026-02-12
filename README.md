@@ -1,5 +1,17 @@
 # Candidate Profile Intelligence Platform
 
+![alt text](https://img.shields.io/badge/react-313131?style=flat&logo=react)
+![alt text](https://img.shields.io/badge/svelte-313131?style=flat&logo=svelte)
+![alt text](https://img.shields.io/badge/fastapi-313131?style=flat&logo=fastapi)
+![alt text](https://img.shields.io/badge/flask-313131?style=flat&logo=flask)
+![alt text](https://img.shields.io/badge/qdrant-313131?style=flat&logo=qdrant)
+![alt text](https://img.shields.io/badge/cohere-313131?style=flat&logo=cohere)
+![alt text](https://img.shields.io/badge/rust-313131?style=flat&logo=rust)
+![alt text](https://img.shields.io/badge/postgres-313131?style=flat&logo=postgresql)
+![alt text](https://img.shields.io/badge/redis-313131?style=flat&logo=redis)
+![alt text](https://img.shields.io/badge/postman-313131?style=flat&logo=postman)
+![alt text](https://img.shields.io/badge/Status-Finished-success)
+
 Plataforma de inteligencia para la gestión y análisis de perfiles de candidatos, diseñada para cubrir un flujo completo end-to-end: desde la creación y administración de datos hasta la búsqueda semántica y generación de insights mediante LLMs.
 
 El proyecto forma parte de un plan de onboarding técnico enfocado en la construcción progresiva de un sistema moderno, escalable y bien documentado.
@@ -33,18 +45,18 @@ Construir un sistema completamente funcional que permita:
 **ETL**
 - [x] Idempotencia
 - [x] Validaciones
-- [ ] Tracking de ejecuciones (revisar)
-- [ ] Endpoint administrativo (revisar)
+- [x] Tracking de ejecuciones
+- [x] Endpoint administrativo
 
 **Qdrant**
 - [x] Colección documentada
 - [x] Definición de payloads
 - [x] Operaciones de upsert
-- [ ] Reindexación soportada (revisar)
+- [x] Reindexación soportada
 
 **LLM Avanzado**
-- [ ] Prompts versionados (preguntar)
-- [ ] Tool calling implementado (preguntar)
+- [x] Prompts versionados
+- [x] Tool calling implementado
 - [x] Prompt compression aplicada
 - [x] Guardrails (tokens y timeouts)
 - [ ] Fallback seguro (verificar)
@@ -53,7 +65,7 @@ Construir un sistema completamente funcional que permita:
 - [x] Aplicación Svelte creada
 - [x] Funcionalidad clara y aislada
 - [x] Integración con React
-- [ ] Build y despliegue mediante Docker (por hacer)
+- [x] Build y despliegue mediante Docker
 
 **Infraestructura y Calidad**
 - [x] Docker Compose
@@ -62,15 +74,11 @@ Construir un sistema completamente funcional que permita:
 - [x] CI activo
 
 **Documentación**
-- [ ] README (por terminar)
+- [x] README (por terminar)
 - [x] Arquitectura
 - [x] API
 - [x] Runbook
 - [x] ADRs
-
-## Estado actual:
-
-- Día 17 - Documentación final - Demo completa
 
 ## Features (objetivo final)
 
@@ -183,32 +191,6 @@ Construir un sistema completamente funcional que permita:
 | Redis       | 6379   | Cache y cola de jobs                          |
 | Qdrant      | 6333   | Motor de búsqueda vectorial                   |
 
-## Endpoints principales
-
-### FastAPI (Puerto 8000)
-
-- `GET /v1/candidates/` - Listar candidatos
-- `POST /v1/candidates/` - Crear candidato
-- `GET /v1/candidates/{candidate_id}` - Obtener candidato
-- `PUT /v1/candidates/{candidate_id}` - Actualizar candidato
-- `DELETE /v1/candidates/{candidate_id}` - Eliminar candidato
-- `GET /docs` - Documentación Swagger/OpenAPI
-- `POST /v1/semantic_search/` - Busqueda semantica para encontrar candidatos
-- `GET /v1/semantic_search/similar/{candidate_id}` - Busqueda por similitud de varios candidatos del candidato elegido
-- `GET /v1/insights/{candidate_id}` - Insights generales del candidato
-- `POST /v1/insights/score` - Scoring de compatibilidad candidato-vacante
-- `POST /v1/insights/summary` - Resumen técnico comprensivo
-- `GET /v1/insights/{candidate_id}/comparison` - Análisis comparativo vs mercado
-- `GET /v1/insights/health` - Estado del servicio de insights
-
-### Flask (Puerto 5000)
-
-- `POST /v1/admin/etl/sync` - Encolar job ETL asíncrono (retorna job_id)
-- `GET /v1/admin/etl/status/<job_id>` - Consultar estado de job ETL
-- `POST /v1/admin/etl/sync/direct` - Ejecutar ETL síncrono (legacy)
-- `POST /v1/admin/qdrant/reindex` - Re-indexar todos los candidatos
-- `GET /v1/admin/qdrant/stats` - Estadísticas de Qdrant
-
 ## Estructura del proyecto
 
 ```text
@@ -224,6 +206,9 @@ infra/
 ├── Dockerfile.fastapi             # Imagen para FastAPI
 ├── Dockerfile.flask               # Imagen para Flask
 ├── Dockerfile.react               # Imagen para React
+├── Dockerfile.worker_rust         # Imagen para Worker Rust
+├── Dockerfile.svelte              # Imagen para Svelte
+├── Dockerfile.pipeline            # Imagen para Pipeline
 └── db/
     └── init.sql                   # Script de inicialización de DB
 
@@ -238,6 +223,7 @@ services/
 │   │   ├── api/v1/                # Endpoints versioned
 │   │   ├── core/                  # Configuración
 │   │   ├── db/                    # Modelos y conexión
+│   │   │   └── models/            # Modelos de base de datos
 │   │   ├── schemas/               # Validación con Pydantic
 │   │   └──  llm/
 │   ├── tests/                     # tests (pytest)
@@ -275,6 +261,9 @@ ui/
     ├── src/
     │   ├── assets/
     │   ├── lib/
+    │   │     ├── components/
+    │   │     └── services/
+    │   └── routes/
     ├── package.json
     └── vite.config.ts
 
@@ -302,24 +291,6 @@ prompts/
   - **ADR 003**: Refactor de búsqueda semántica
   - **ADR 002**: Migraciones de base de datos
   - **ADR 001**: Manejo descentralizado de errores
-
-## Próximos pasos
-
-Para continuar con el desarrollo del proyecto:
-
-1. **Optimizaciones de Performance**
-   - Implementación de caching con Redis
-   - Rate limiting y quota management
-   - Optimización de queries a PostgreSQL
-
-2. **Monitoreo y Observabilidad**
-   - Dashboards Grafana para métricas de insights
-   - Alertas para latencia y costo de tokens
-   - Logging centralizado con ELK
-
-3. **Optimizaciones de Cohere API**
-   - Fine-tuning de prompts con feedback
-   - A/B testing de modelos y temperaturas
 
 ## Contribuciones
 
