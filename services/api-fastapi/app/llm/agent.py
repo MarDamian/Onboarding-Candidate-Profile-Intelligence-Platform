@@ -1,22 +1,36 @@
+from langchain_groq import ChatGroq
+from langchain_cohere import ChatCohere
 from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_cohere import ChatCohere
 
 from app.llm.tools import get_candidate_profile, search_similar_profiles, calculate_score
 from app.llm.prompt_loader import PromptLoader
 from app.llm.compression import ContextCompressor
 from app.core.config import settings
-import json, re, timeout_decorator
+from app.core.utils import external_api_retry
+import json, re, asyncio
 
 
 class Agent:
     def __init__(self):
-        self.llm = ChatCohere(
-            cohere_api_key=settings.COHERE_API_KEY,
+        # Modelo Principal (Cohere)
+        primary_llm = ChatCohere( 
             model=settings.MODEL_NAME,
+            cohere_api_key=settings.COHERE_API_KEY,
             temperature=settings.TEMPERATURE,
             max_tokens=settings.MAX_TOKENS
         )
+
+        # Modelo de Fallback con Groq
+        fallback_llm = ChatGroq(
+            model=settings.FALLBACK_MODEL_NAME,
+            groq_api_key=settings.GROQ_API_KEY,
+            temperature=settings.TEMPERATURE,
+            max_tokens=settings.MAX_TOKENS
+        )
+
+        # Configurar Fallback asíncrono y síncrono
+        self.llm = primary_llm.with_fallbacks([fallback_llm])
 
         self.tools = [
             get_candidate_profile,
@@ -43,12 +57,19 @@ class Agent:
             max_iterations=5,
         )
 
-    @timeout_decorator.timeout(settings.LLM_TIMEOUT)
+
+    @external_api_retry
+    async def _generate_internal(self, input_data: dict):
+        return await asyncio.wait_for(
+            self.agent_executor.ainvoke(input_data), 
+            timeout=settings.LLM_TIMEOUT
+        )
+
     async def generate_insight(self, query: str):
         try:
             compressed_input = ContextCompressor.compress(query)
             
-            response = await self.agent_executor.ainvoke({
+            response = await self._generate_internal({
                 "input": compressed_input
             })
             
@@ -71,13 +92,12 @@ class Agent:
                 "weaknesses": [],
                 "suggested_role": "N/A"
                 }
-        except timeout_decorator.TimeoutError:
+        except (asyncio.TimeoutError, Exception) as e:
+            print(f"Error generating insight after retries: {e}")
             return {
-                'summary': 'Timeout: Insight generation took too long..', 
+                'summary': 'Timeout/Error: Insight generation failed after multiple retries.', 
                 'score': 0, 
                 'strengths': [], 
                 'weaknesses': [], 
                 'suggested_role': 'N/A'
             }
-        except Exception as e:
-            return f"Error: {str(e)}."

@@ -63,6 +63,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
       - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379
+      - REDIS_QUEUE=jobs:etl
       - EMBEDDING_MODEL=${EMBEDDING_MODEL}
       - EMBEDDING_DIMENSION=${EMBEDDING_DIMENSION}
       - EMBEDDING_DISTANCE=${EMBEDDING_DISTANCE}
@@ -71,6 +73,8 @@ services:
       postgres_db:
         condition: service_healthy
       qdrant:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     env_file:
       - ../.env
@@ -124,8 +128,126 @@ services:
       - VITE_API_URL=${VITE_API_URL}
     env_file:
       - ../.env
-      
+
+  worker_rust:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.worker-rust
+    container_name: worker_rust
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres_db:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    environment:  
+      - REDIS_URL=redis://redis:6379
+      - REDIS_QUEUE=jobs:etl
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
+      - QDRANT_URL=http://qdrant:6334/
+      - COHERE_API_KEY=${COHERE_API_KEY}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+      - EMBEDDING_DIMENSION=${EMBEDDING_DIMENSION}
+      - EMBEDDING_DISTANCE=${EMBEDDING_DISTANCE}
+    volumes:
+      - ./:/app
+    restart: always 
+    env_file:
+      - ../.env
+  
+  svelte-mf:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.svelte
+    container_name: svelte_mf
+    restart: always
+    ports:
+      - "5174:5174"
+    volumes:
+      - ../ui/svelte-mf:/app
+      - /app/node_modules
+    env_file:
+      - ../.env
+
+  test-fastapi:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.fastapi
+    container_name: test_fastapi
+    profiles: ["test"]
+    volumes:
+      - ../services/api-fastapi:/app
+      - ../pipelines:/app/pipelines
+      - ../prompts:/app/prompts
+    environment:
+      - DATABASE_URL=sqlite:///./test.db
+      - QDRANT_URL=http://qdrant:6333
+      - COHERE_API_KEY=test-key
+      - MODEL_NAME=command-a-03-2025
+      - TEMPERATURE=0
+      - MAX_TOKENS=500
+      - LLM_TIMEOUT=30
+      - LANGCHAIN_TRACING_V2=false
+      - LANGCHAIN_API_KEY=test-key
+      - EMBEDDING_MODEL=embed-multilingual-v3.0
+      - EMBEDDING_DIMENSION=1024
+    command: python -m pytest tests/ -v --tb=short --cov=app --cov-report=term-missing
+
+  test-flask:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.flask
+    container_name: test_flask
+    profiles: ["test"]
+    volumes:
+      - ../services/api-flask:/app
+      - ../pipelines:/app/pipelines
+    environment:
+      - DATABASE_URL=sqlite:///./test.db
+      - REDIS_URL=redis://redis:6379/0
+      - QDRANT_URL=http://qdrant:6333
+      - COHERE_API_KEY=test-key
+      - EMBEDDING_MODEL=embed-multilingual-v3.0
+      - EMBEDDING_DIMENSION=1024
+      - EMBEDDING_DISTANCE=Cosine
+    command: python -m pytest tests/ -v --tb=short --cov=app --cov-report=term-missing
+
+  test-react:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.react
+    container_name: test_react
+    profiles: ["test"]
+    volumes:
+      - ../ui/react-app:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000/v1
+    command: npm run test
+
+  test-pipelines:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.pipelines
+    container_name: test_pipelines
+    profiles: ["test"]
+    volumes:
+      - ../pipelines:/app
+    environment:
+      - DATABASE_URL=sqlite:///./test.db
+      - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379/0
+      - COHERE_API_KEY=test-key
+      - EMBEDDING_MODEL=embed-multilingual-v3.0
+      - EMBEDDING_DIMENSION=1024
+      - EMBEDDING_DISTANCE=Cosine
+    command: python -m pytest tests/ -v --tb=short --cov=etl --cov=utils --cov-report=term-missing
+
+
 volumes:
   postgres_data:
   qdrant_data:
   redis_data:
+  worker_rust_data:
+  evelte_mf_data:

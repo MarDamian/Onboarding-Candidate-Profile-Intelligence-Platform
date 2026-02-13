@@ -1,6 +1,7 @@
 import cohere
 from typing import List
 from dotenv import load_dotenv
+from pipelines.utils.retry import pipeline_retry
 import os
 import warnings
 
@@ -19,6 +20,7 @@ class EmbeddingsService:
         self.model = os.getenv("EMBEDDING_MODEL")
         self.dimension = os.getenv("EMBEDDING_DIMENSION")
         
+    @pipeline_retry
     def generate_embedding(self, text: str, input_type: str = "search_document") -> List[float]:
         """Genera el vector de embedding para un texto dado.
         

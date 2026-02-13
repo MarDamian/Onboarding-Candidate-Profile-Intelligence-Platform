@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
-from app.schemas.search import SearchRequest
+from app.schemas.search import SearchRequest, SearchResponse
 from app.core.config import settings
+
 from pipelines.utils.search_service import SearchService
 
 router = APIRouter(prefix="/semantic_search", tags=["search"])
@@ -9,7 +10,16 @@ search_service = SearchService(
     qdrant_url=settings.QDRANT_URL
 )
  
-@router.post("/")
+@router.post("/",
+    response_model=SearchResponse,
+    responses={
+        200: {"description": "Candidate search results"},
+        422: {"description": "Invalid query parameters"},
+        500: {"description": "Internal server error"}
+    },
+    summary="Realiza búsqueda semántica de candidatos",
+    description="Realiza búsqueda semántica de candidatos filtrando por query, limit, score_threshold, skills_filter y name_filter"
+)
 def semantic_search(search_params: SearchRequest):
     """Realiza búsqueda semántica de candidatos.
 
@@ -42,7 +52,17 @@ def semantic_search(search_params: SearchRequest):
             detail=f"Error: {str(e)}."
         )
         
-@router.get("/similar/{candidate_id}")
+@router.get("/similar/{candidate_id}",
+    response_model=SearchResponse,
+    responses={
+        200: {"description": "Candidate search results"},
+        422: {"description": "Invalid query parameters"},
+        404: {"description": "Candidate not found"},
+        500: {"description": "Internal server error"}
+    },
+    summary="Realiza búsqueda semántica de candidatos",
+    description="Realiza búsqueda semántica de candidatos filtrando por query, limit, score_threshold, skills_filter y name_filter"
+)
 def search_similar(
     candidate_id: int,
     limit: int = Query(5, ge=1, le=50),
@@ -81,6 +101,8 @@ def search_similar(
             "results": results
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,

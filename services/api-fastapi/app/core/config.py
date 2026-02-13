@@ -15,9 +15,23 @@ class Settings(BaseSettings):
     TEMPERATURE: int = os.getenv("TEMPERATURE")
     LLM_TIMEOUT: int = os.getenv("LLM_TIMEOUT")
     MAX_TOKENS: int = os.getenv("MAX_TOKENS")
+
+    # Configuración de reintentos
+    MAX_RETRIES: int = os.getenv("MAX_RETRIES")
+    RETRY_MIN_WAIT: int = os.getenv("RETRY_MIN_WAIT")
+    RETRY_MAX_WAIT: int = os.getenv("RETRY_MAX_WAIT")
     
     # Base de datos
     DATABASE_URL: str = os.getenv("DATABASE_URL")
     QDRANT_URL: str = os.getenv("QDRANT_URL")
+    
+    # Redis (para encolar jobs al worker Rust)
+    REDIS_URL: str = os.getenv("REDIS_URL")
+    REDIS_QUEUE: str = os.getenv("REDIS_QUEUE")
+
+    # Fallback LLM (OpenAI u otro)
+    FALLBACK_MODEL_NAME: str = os.getenv("FALLBACK_MODEL_NAME")
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY")
+
 
 settings = Settings()

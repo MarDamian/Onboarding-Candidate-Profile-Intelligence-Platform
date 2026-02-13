@@ -5,9 +5,19 @@ __pycache__/
 *.pyd
 venv/
 
+# Testing / Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+test.db
+
 # Enviroment
 .env/
 .env
+.vite/
 
 # Docker
 postgres_data/

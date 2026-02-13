@@ -18,11 +18,15 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 - **React App**
   - Interfaz principal construida con React y TypeScript.
   - **Gestión de Formularios**: Implementación de `react-hook-form` para validaciones eficientes y manejo de estado.
-  - **Diseño y Estilo**: Sistema de estilos moderno con CSS optimizado, incluyendo tablas con zebra-striping, efectos de hover y diseño responsivo.
+  - **Diseño y Estilo**: Sistema de estilos moderno con tailwind y heroui, efectos de hover y diseño responsivo.
   - **Arquitectura de Red**: Capa de servicios centralizada (`CandidateService.ts`) con gestión de errores y estados de carga (`loading`) descentralizados directamente en los componentes de página para mayor precisión visual.
   - Consume la API pública expuesta por FastAPI.
 
-> En fases posteriores se integrará un microfrontend en Svelte para vistas especializadas.
+- **Svelte Microfrontend**
+  - Microfrontend construido con Svelte y TypeScript.
+  - **Diseño y Estilo**: Sistema de estilos moderno con CSS.
+  - **Arquitectura de Red**: Capa de servicios centralizada con gestión de errores y estados de carga descentralizados directamente en los componentes de página para mayor precisión visual.
+  - Consume la API pública de Flask.
 
 
 ### Servicios - Backend
@@ -31,14 +35,35 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
   - API pública del sistema
   - Exposición de endpoints CRUD para la entidad principal (Candidate)
   - **Búsqueda semántica** con embeddings y filtros avanzados
+  - **Indexación automática**: cada operación CRUD (crear, actualizar, eliminar) encola un job a Redis para que el Worker Rust actualice Qdrant automáticamente
   - Validaciones y documentación OpenAPI
 
 - **Flask (Administración)**
   - API administrativa
-  - Orquestación de procesos ETL
+  - Orquestación de procesos ETL (encolado asíncrono)
   - Gestión de colección Qdrant (reindex, stats, clear, rebuild)
   - Endpoints admin bajo `/v1/admin/etl` y `/v1/admin/qdrant`
   - No expuesta directamente al usuario final
+  - Envío de jobs a Redis para procesamiento asíncrono
+  - Los endpoints `/reindex` y `/rebuild` ahora son asíncronos (202 Accepted) delegando al Worker Rust
+  - Se mantienen variantes `/sync` como fallback legacy
+
+- **Worker Rust**
+  - Procesador asíncrono de jobs desde Redis (`jobs:etl`)
+  - **Consumo eficiente** de jobs con `BLPOP` (bloqueante, sin polling)
+  - **Tipos de jobs soportados**:
+    - `etl_sync`: Procesamiento batch de ETL completo (candidatos stale)
+    - `embedding_batch`: Generación de embeddings por lotes específicos
+    - `single_index`: Indexación de un candidato individual (disparado automáticamente en create/update)
+    - `delete_point`: Eliminación de vector de Qdrant (disparado automáticamente en delete)
+    - `full_reindex`: Limpieza completa de Qdrant + reset de BD + re-indexación de todos los candidatos
+  - **Integración con servicios externos**:
+    - PostgreSQL (sqlx) para extracción y actualización de candidatos
+    - Cohere API para generación de embeddings
+    - Qdrant para indexación vectorial
+  - **Logging detallado** con tracing para observabilidad
+  - **Runtime asíncrono** con Tokio para alto rendimiento
+  - **Escalabilidad horizontal**: Múltiples workers pueden consumir de la misma cola
 
 
 ### Pipelines - Procesamiento de Datos
@@ -78,7 +103,9 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 
 - **Redis**
   - Cache y soporte para procesamiento asíncrono
-  - Tracking de jobs ETL
+  - Cola de jobs (`jobs:etl`) para Worker Rust
+  - Tracking de estado de jobs ETL
+  - Storage de estado con hashes (`job:{id}`)
 
 ### Persistencia y Migraciones
 
@@ -105,7 +132,33 @@ En su estado actual (Semana 1), la arquitectura soporta un flujo CRUD end-to-end
 - **Redis**: `redis:8.4.0-alpine`
 - **Qdrant**: `qdrant/qdrant:v1.16.2`
 - **Python**: `python:3.12-slim` (FastAPI y Flask)
+- **Node**: `node:22-alpine` (React y Svelte)
 
 ### Startup Automático
-- **FastAPI**: Ejecuta migraciones → seed → servidor
+- **FastAPI**: Ejecuta migraciones → seed → encola indexación inicial → servidor
 - **Flask**: Workers con timeout extendido para procesos ETL de larga duración
+- **React**: Ejecuta servidor de desarrollo
+- **Svelte**: Ejecuta servidor de desarrollo
+
+### Testing y CI
+
+#### Estrategia de Testing
+- **Unit tests**: Lógica de negocio aislada (schemas, compresión, prompts, transformaciones)
+- **Integration tests**: Endpoints completos con base de datos en memoria (SQLite)
+- **Service mocks**: Servicios externos mockeados (Qdrant, Cohere, Redis) para determinismo
+
+#### CI/CD - GitHub Actions
+Pipeline automatizado (`.github/workflows/ci.yml`) con 6 jobs paralelos:
+
+1. **test-fastapi**: Python 3.12, pytest con cobertura
+2. **test-flask**: Python 3.12, pytest con cobertura
+3. **test-pipelines**: Python 3.12, pytest con cobertura
+4. **test-react**: Node 22, Vitest + ESLint
+5. **check-rust**: Rust stable, `cargo check` + `cargo clippy`
+6. **docker-build**: Validación de docker-compose e imágenes (requiere jobs 1-4)
+
+Features del pipeline:
+- Cache de dependencias (pip, npm, cargo)
+- Concurrencia controlada (cancela runs previos del mismo PR)
+- Artefactos de cobertura por servicio
+- Variables de entorno de test automáticas

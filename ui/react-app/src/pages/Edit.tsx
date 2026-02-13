@@ -1,97 +1,205 @@
-import { useParams, useNavigate } from "react-router-dom"
-import { useState, useEffect } from "react"
-import { useForm } from 'react-hook-form';
-import CandidateService from "../services/CandidateService"
-import type { CandidateUpdate } from "../types/candidate"
-import { Card } from "../components/Card";
+import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { Input, Textarea, Button, Spinner } from "@heroui/react"; // Asegúrate de importar estos
+import CandidateService from "../services/CandidateService";
+import type { CandidateUpdate } from "../types/candidate";
 
 export const EditPage = () => {
-    const { id } = useParams();
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<CandidateUpdate>();
 
-    const [loading, setLoading] = useState<boolean>(false);
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors, isSubmitting },
+    } = useForm<CandidateUpdate>({
+        mode: "onTouched",
+    });
 
-    const handleGetCandidate = async () => {
+    const [loading, setLoading] = useState(true);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+
+    const fetchCandidate = async () => {
+        if (!id) return;
+        setLoading(true);
         try {
             const candidateData = await CandidateService.getCandidate(id);
             if (candidateData) {
                 reset(candidateData);
             }
         } catch (error) {
-            console.error("Error fetching candidate for edit:", error);
-        }
-    }
-
-    useEffect(() => {
-        handleGetCandidate();
-    }, [id]);
-
-    const onSubmit = async (data: CandidateUpdate) => {
-        setLoading(true);
-        try {
-            await CandidateService.editCandidate(id, data);
-            alert(`Candidate: ${data.name} edit successfully`);
-            navigate("/");
-        } catch (error) {
-            console.error("Error updating candidate:", error);
-            alert(`Candidate: ${data.name} not edited successfully`);
+            console.error("Error fetching candidate:", error);
         } finally {
             setLoading(false);
         }
+    };
+
+    useEffect(() => {
+        fetchCandidate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, reset]);
+
+    const onSubmit = async (data: CandidateUpdate) => {
+        setSubmitError(null);
+        try {
+            await CandidateService.editCandidate(id!, data);
+            console.log(`Candidato ${data.name} actualizado con éxito`);
+            navigate("/");
+        } catch (error) {
+            console.error("Error updating candidate:", error);
+            setSubmitError("No se pudo actualizar el candidato. Intenta de nuevo.");
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex min-h-[60vh] items-center justify-center">
+                <Spinner size="lg" color="primary" />
+            </div>
+        );
     }
 
-
     return (
-        <>
-            <Card title="Edit Candidate" subtitle="">
-                <form onSubmit={handleSubmit(onSubmit)}
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '1rem',
-                        minWidth: '400px'
-                    }}
-                >
-                    <label htmlFor="name">Name </label>
-                    <input className='border rounded-sm p-1' placeholder='Juan Perez' {...register('name', { required: "Name is required" })} />
-                    {errors.name && <p className='error'>{errors.name.message}</p>}
-                    <label htmlFor="email">Email</label>
-                    <input className='border rounded-sm p-1' placeholder='example@example.com' type="email" {...register('email', { required: "Email is required" })} />
-                    {errors.email && <p className='error'>{errors.email.message}</p>}
-                    <label htmlFor="phone">Phone</label>
-                    <input className='border rounded-sm p-1' placeholder='+00 0000000000' {...register('phone', { required: "Phone is required" })} />
-                    {errors.phone && <p className='error'>{errors.phone.message}</p>}
-                    <label htmlFor="location">Location</label>
-                    <input className='border rounded-sm p-1' placeholder='Ingresa un país' {...register('location', { required: "Location is required" })} />
-                    {errors.location && <p className='error'>{errors.location.message}</p>}
-                    <label htmlFor="education">Education</label>
-                    <input className='border rounded-sm p-1' placeholder='Nivel de educación' {...register('education', { required: "Education is required" })} />
-                    {errors.education && <p className='error'>{errors.education.message}</p>}
-                    <label htmlFor="headline">Headline</label>
-                    <input className='border rounded-sm p-1' placeholder='Información destacada' {...register('headline', { required: "Headline is required" })} />
-                    {errors.headline && <p className='error'>{errors.headline.message}</p>}
-                    <label htmlFor="summary">Summary</label>
-                    <textarea className='border rounded-sm p-1' placeholder='Resumen de tu perfil' {...register('summary', { required: "Summary is required" })} />
-                    {errors.summary && <p className='error'>{errors.summary.message}</p>}
-                    <label htmlFor="role">Role</label>
-                    <input className='border rounded-sm p-1' placeholder='Desarrollador web' {...register('role', { required: "Role is required" })} />
-                    {errors.role && <p className='error'>{errors.role.message}</p>}
-                    <label htmlFor="experience">Experience</label>
-                    <textarea className='border rounded-sm p-1' placeholder='Describir experiencia' {...register('experience', { required: "Experience is required" })} />
-                    {errors.experience && <p className='error'>{errors.experience.message}</p>}
-                    <label htmlFor="skills">Skills</label>
-                    <input className='border rounded-sm p-1' placeholder='Tus habilidades' {...register('skills', { required: "Skills is required" })} />
-                    {errors.skills && <p className='error'>{errors.skills.message}</p>}
+        <div className="mx-auto w-full max-w-2xl px-4 py-8">
+            <h1 className="mb-8 text-2xl font-bold text-foreground">Editar Candidato</h1>
 
-                    <button className="button" type="submit" disabled={loading}>
-                        {loading ? 'Saving...' : 'Save'}
-                    </button>
-                    <button className="button" type="button" onClick={() => navigate(-1)}>
-                        Back
-                    </button>
-                </form>
-            </Card>
-        </>
-    )
-}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+                <Input
+                    label="Nombre"
+                    labelPlacement="outside"
+                    placeholder="Juan Pérez"
+                    isRequired
+                    isInvalid={!!errors.name}
+                    errorMessage={errors.name?.message}
+                    {...register("name", { required: "El nombre es obligatorio" })}
+                />
+
+                <Input
+                    type="email"
+                    label="Correo electrónico"
+                    labelPlacement="outside"
+                    placeholder="ejemplo@correo.com"
+                    isRequired
+                    isInvalid={!!errors.email}
+                    errorMessage={errors.email?.message}
+                    {...register("email", {
+                        required: "El correo es obligatorio",
+                        pattern: {
+                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                            message: "Correo inválido",
+                        },
+                    })}
+                />
+
+                <Input
+                    label="Teléfono"
+                    labelPlacement="outside"
+                    placeholder="+00 000 000 0000"
+                    isRequired
+                    isInvalid={!!errors.phone}
+                    errorMessage={errors.phone?.message}
+                    {...register("phone", { required: "El teléfono es obligatorio" })}
+                />
+
+                <Input
+                    label="Ubicación"
+                    labelPlacement="outside"
+                    placeholder="País o ciudad"
+                    isRequired
+                    isInvalid={!!errors.location}
+                    errorMessage={errors.location?.message}
+                    {...register("location", { required: "La ubicación es obligatoria" })}
+                />
+
+                <Input
+                    label="Educación"
+                    labelPlacement="outside"
+                    placeholder="Ingeniería en Sistemas, Maestría en..."
+                    isRequired
+                    isInvalid={!!errors.education}
+                    errorMessage={errors.education?.message}
+                    {...register("education", { required: "La educación es obligatoria" })}
+                />
+
+                <Input
+                    label="Título profesional (Headline)"
+                    labelPlacement="outside"
+                    placeholder="Desarrollador Full Stack | 5+ años de experiencia"
+                    isRequired
+                    isInvalid={!!errors.headline}
+                    errorMessage={errors.headline?.message}
+                    {...register("headline", { required: "El headline es obligatorio" })}
+                />
+
+                <Textarea
+                    label="Resumen profesional"
+                    labelPlacement="outside"
+                    placeholder="Breve descripción de tu perfil profesional..."
+                    minRows={3}
+                    isRequired
+                    isInvalid={!!errors.summary}
+                    errorMessage={errors.summary?.message}
+                    {...register("summary", { required: "El resumen es obligatorio" })}
+                />
+
+                <Input
+                    label="Rol deseado / actual"
+                    labelPlacement="outside"
+                    placeholder="Desarrollador Frontend, Product Manager..."
+                    isRequired
+                    isInvalid={!!errors.role}
+                    errorMessage={errors.role?.message}
+                    {...register("role", { required: "El rol es obligatorio" })}
+                />
+
+                <Textarea
+                    label="Experiencia laboral"
+                    labelPlacement="outside"
+                    placeholder="Describe tu experiencia relevante..."
+                    minRows={4}
+                    isRequired
+                    isInvalid={!!errors.experience}
+                    errorMessage={errors.experience?.message}
+                    {...register("experience", { required: "La experiencia es obligatoria" })}
+                />
+
+                <Input
+                    label="Habilidades"
+                    labelPlacement="outside"
+                    placeholder="React, TypeScript, Node.js, Tailwind..."
+                    isRequired
+                    isInvalid={!!errors.skills}
+                    errorMessage={errors.skills?.message}
+                    {...register("skills", { required: "Las habilidades son obligatorias" })}
+                />
+
+                {submitError && (
+                    <p className="text-sm text-danger">{submitError}</p>
+                )}
+
+                <div className="flex flex-col gap-4 sm:flex-row sm:justify-end">
+                    <Button
+                        variant="flat"
+                        color="danger"
+                        onPress={() => navigate(-1)}
+                        isDisabled={isSubmitting}
+                    >
+                        Cancelar
+                    </Button>
+
+                    <Button
+                        type="submit"
+                        color="primary"
+                        isDisabled={isSubmitting}
+                        isLoading={isSubmitting}
+                        spinner={<Spinner size="sm" color="current" />}
+                    >
+                        {isSubmitting ? "Guardando..." : "Guardar cambios"}
+                    </Button>
+                </div>
+            </form>
+        </div>
+    );
+};

@@ -1,0 +1,25 @@
+FROM rust:1.84-slim AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY . .
+
+WORKDIR /app/services/worker-rust
+RUN cargo build --release
+
+FROM python:3.11-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libssl3 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/services/worker-rust/target/release/worker-rust /usr/local/bin/worker-rust
+CMD ["worker-rust"]

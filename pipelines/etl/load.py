@@ -1,6 +1,7 @@
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
 from sqlalchemy import create_engine, text
+from pipelines.utils.retry import pipeline_retry
 import os
 
 class Loader:
@@ -11,6 +12,7 @@ class Loader:
         self.embedding_dimension = os.getenv("EMBEDDING_DIMENSION")
         self.embedding_distance = os.getenv("EMBEDDING_DISTANCE", "Cosine")
         
+    @pipeline_retry
     def ensure_collection(self):
         collections = self.q_client.get_collections().collections
         if not any(c.name == self.collection_name for c in collections):
@@ -27,6 +29,7 @@ class Loader:
                 )
             )
     
+    @pipeline_retry
     def load_points(self, points_data):
         points = [PointStruct(id=p['id'], vector=p['vector'], payload=p['payload']) for p in points_data]
         self.q_client.upsert(collection_name=self.collection_name, points=points)

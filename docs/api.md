@@ -44,7 +44,7 @@ Recupera información detallada de un solo candidato mediante su ID.
   - **Código:** `404 Not Found` (El candidato no existe).
 
 #### 3. Crear Candidato
-Crea un nuevo perfil de candidato.
+Crea un nuevo perfil de candidato. La indexación en Qdrant se realiza automáticamente en segundo plano mediante el Worker Rust.
 
 - **URL:** `/candidate/`
 - **Método:** `POST`
@@ -57,7 +57,7 @@ Crea un nuevo perfil de candidato.
   - **Código:** `409 Conflict` (El correo electrónico o teléfono ya existen).
 
 #### 4. Actualizar Candidato
-Actualiza un perfil de candidato existente.
+Actualiza un perfil de candidato existente. El embedding en Qdrant se re-genera automáticamente en segundo plano.
 
 - **URL:** `/candidate/{id}`
 - **Método:** `PUT`
@@ -71,7 +71,7 @@ Actualiza un perfil de candidato existente.
   - **Código:** `422 Unprocessable Entity` (Error de validación).
 
 #### 5. Eliminar Candidato
-Elimina un perfil de candidato del sistema.
+Elimina un perfil de candidato del sistema. El vector asociado en Qdrant se elimina automáticamente en segundo plano.
 
 - **URL:** `/candidate/{id}`
 - **Método:** `DELETE`
@@ -185,10 +185,69 @@ Retorna de la request para la generación de Insights
 
 ### Endpoints de Administración ETL
 
-#### 1. Ejecutar Pipeline ETL
-Procesa candidatos pendientes de indexación en Qdrant.
+El sistema ETL ahora opera mediante un patrón **asíncrono**:
+- **Flask API** encola jobs en Redis
+- **Worker Rust** consume y procesa los jobs
+- Estado de jobs rastreado en Redis
+
+#### 1. Encolar Job ETL (Asíncrono)
+Encola un job de sincronización ETL en Redis. El Worker Rust lo procesará de forma asíncrona.
 
 - **URL:** `/admin/etl/sync`
+- **Método:** `POST`
+- **Respuesta Exitosa:**
+  - **Código:** `202 Accepted`
+  - **Contenido:** 
+    ```json
+    {
+      "status": "queued",
+      "job_id": "etl_20260209_163045_a1b2c3d4",
+      "message": "ETL job enqueued for Rust worker"
+    }
+    ```
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error encolando job en Redis).
+
+#### 2. Consultar Estado de Job Específico
+Obtiene el estado actual de un job ETL por su ID.
+
+- **URL:** `/admin/etl/status/<job_id>`
+- **Método:** `GET`
+- **Parámetros de URL:** `job_id=[string]`
+- **Respuesta Exitosa (Job encontrado):**
+  - **Código:** `200 OK`
+  - **Contenido:**
+    ```json
+    {
+      "job_id": "etl_20260209_163045_a1b2c3d4",
+      "status": "completed",
+      "processed": "15",
+      "updated_at": "2026-02-09T16:31:02Z"
+    }
+    ```
+- **Respuesta (Job no encontrado):**
+  - **Código:** `404 Not Found`
+  - **Contenido:**
+    ```json
+    {
+      "job_id": "etl_20260209_163045_a1b2c3d4",
+      "status": "not_found"
+    }
+    ```
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error consultando Redis).
+
+**Estados posibles del job:**
+- `queued`: Job encolado, pendiente de procesamiento
+- `processing`: Job siendo procesado por el worker
+- `completed`: Job completado exitosamente
+- `failed`: Job falló durante el procesamiento
+- `not_found`: Job no existe en Redis
+
+#### 3. Ejecutar Pipeline ETL (Síncrono - Legacy)
+Procesa candidatos pendientes de indexación en Qdrant de forma síncrona. Endpoint legacy para compatibilidad.
+
+- **URL:** `/admin/etl/sync/direct`
 - **Método:** `POST`
 - **Respuesta Exitosa:**
   - **Código:** `200 OK`
@@ -196,21 +255,23 @@ Procesa candidatos pendientes de indexación en Qdrant.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error durante ejecución del ETL).
 
-#### 2. Consultar Status de Jobs ETL
-Obtiene el historial de ejecuciones del pipeline ETL.
+**Nota:** Este endpoint ejecuta el ETL de forma síncrona bloqueando la respuesta. Se recomienda usar `/admin/etl/sync` para ejecuciones asíncronas.
 
-- **URL:** `/admin/etl/status`
-- **Método:** `GET`
-- **Respuesta Exitosa:**
-  - **Código:** `200 OK`
-  - **Contenido:** Lista de jobs con sus estados y resultados.
-- **Respuestas de Error:**
-  - **Código:** `500 Internal Server Error` (Error consultando historial).
-
-#### 3. Re-indexar Todos los Candidatos
-Fuerza la re-indexación completa de todos los candidatos en Qdrant.
+#### 4. Re-indexar Todos los Candidatos (Asíncrono)
+Encola un job de re-indexación completa al Worker Rust. El worker limpia Qdrant, resetea el estado de indexación y re-procesa todos los candidatos.
 
 - **URL:** `/admin/qdrant/reindex`
+- **Método:** `POST`
+- **Respuesta Exitosa:**
+  - **Código:** `202 Accepted`
+  - **Contenido:** Objeto con status, mensaje y datos del job encolado.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error encolando el job).
+
+#### 4b. Re-indexar Todos los Candidatos (Síncrono - Legacy)
+Ejecuta la re-indexación de forma síncrona. Fallback para compatibilidad.
+
+- **URL:** `/admin/qdrant/reindex/sync`
 - **Método:** `POST`
 - **Respuesta Exitosa:**
   - **Código:** `200 OK`
@@ -218,7 +279,7 @@ Fuerza la re-indexación completa de todos los candidatos en Qdrant.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error durante la re-indexación).
 
-#### 4. Obtener Estadísticas de Qdrant
+#### 5. Obtener Estadísticas de Qdrant
 Obtiene información y métricas de la colección de candidatos.
 
 - **URL:** `/admin/qdrant/stats`
@@ -229,7 +290,7 @@ Obtiene información y métricas de la colección de candidatos.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error obteniendo estadísticas).
 
-#### 5. Limpiar Colección de Qdrant
+#### 6. Limpiar Colección de Qdrant
 Elimina todos los puntos de la colección de candidatos en Qdrant.
 
 - **URL:** `/admin/qdrant/clear`
@@ -240,10 +301,21 @@ Elimina todos los puntos de la colección de candidatos en Qdrant.
 - **Respuestas de Error:**
   - **Código:** `500 Internal Server Error` (Error limpiando colección).
 
-#### 6. Reconstruir Colección desde Cero
-Reconstruye completamente la colección limpiando Qdrant y re-indexando todos los candidatos.
+#### 7. Reconstruir Colección desde Cero (Asíncrono)
+Encola un job de reconstrucción completa al Worker Rust. Limpia Qdrant y re-indexa todos los candidatos de forma asíncrona.
 
 - **URL:** `/admin/qdrant/rebuild`
+- **Método:** `POST`
+- **Respuesta Exitosa:**
+  - **Código:** `202 Accepted`
+  - **Contenido:** Objeto con status, mensaje y datos del job encolado.
+- **Respuestas de Error:**
+  - **Código:** `500 Internal Server Error` (Error encolando el job).
+
+#### 7b. Reconstruir Colección desde Cero (Síncrono - Legacy)
+Reconstruye completamente la colección de forma síncrona. Fallback para compatibilidad.
+
+- **URL:** `/admin/qdrant/rebuild/sync`
 - **Método:** `POST`
 - **Respuesta Exitosa:**
   - **Código:** `200 OK`
